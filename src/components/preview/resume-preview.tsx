@@ -33,7 +33,7 @@ export function ResumePreview() {
       frame = requestAnimationFrame(() => {
         const article = root.querySelector("article");
         // Gizliyken (mobilde başka sekme) ölçüm yapılamaz; görünür olunca container.width değişir ve tekrar çalışır.
-        if (article && root.offsetParent !== null) setPageCount(paginate(article));
+        if (article && root.offsetParent !== null) setPageCount(paginate(article).pageCount);
       });
     };
     run();

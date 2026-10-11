@@ -114,15 +114,16 @@
   }
 
   /*
-   * Sayfa sonu kuralları — önizleme simülasyonuyla (lib/resume/pagination.ts) aynı olmalı:
-   * sayfaya sığan bölüm bölünmez (yeni sayfa başlıkla başlar), uzun bölüm kayıtlar
-   * arasından bölünür, başlık tek başına sayfa sonunda kalmaz.
-   * "Sığan bölüm" işareti yazdırmadan hemen önce ölçülerek konur (lib/export/print.ts).
+   * Sayfa sonları yazdırmadan hemen önce önizlemeyle aynı algoritmayla hesaplanır
+   * (lib/export/print.ts → lib/resume/pagination.ts) ve buradaki öznitelikle uygulanır.
+   * Zorunlu sayfa sonundan sonra kenar boşluğu korunduğu için margin sıfırlanır.
    */
-  .resume-page > section[data-keep-together] {
-    break-inside: avoid;
+  .resume-page [data-page-break] {
+    break-before: page;
+    margin-top: 0 !important;
   }
 
+  /* Bir kaydın (iş, okul…) maddeleri iki sayfaya ayrılmaz. */
   .resume-page > section > div > * {
     break-inside: avoid;
   }

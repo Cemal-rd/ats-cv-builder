@@ -1,7 +1,8 @@
-import { CONTENT_HEIGHT_PX, KEEP_TOGETHER_ATTR } from "@/lib/resume/pagination";
+import { paginate, PRINT_GEOMETRY, resetPushes } from "@/lib/resume/pagination";
 
 const PRINT_ROOT_ID = "print-root";
 const MEASURING_CLASS = "print-measuring";
+const PAGE_BREAK_ATTR = "data-page-break";
 
 /**
  * Seçili CV yazı tipinin normal, kalın ve italik kesimlerinin yüklendiğinden emin olur.
@@ -21,16 +22,20 @@ async function ensureResumeFontsLoaded(root: HTMLElement): Promise<void> {
 }
 
 /**
- * Bir sayfaya sığan bölümleri "bölünmez" olarak işaretler. Bu kural uzun bölümlere
- * uygulanırsa tarayıcı bölümü önce yeni sayfaya iter ve önceki sayfa boş kalır;
- * CSS yükseklik bilemediği için ölçüm burada, baskı düzeninde yapılır.
+ * Sayfa sonlarını önizlemeyle aynı algoritmayla (lib/resume/pagination.ts) baskı
+ * düzeninde hesaplar ve açık sayfa sonu olarak işaretler. Tarayıcının kendi
+ * "bölme" sezgilerine bırakmak önizlemeyle farklı ve kötü sonuçlar veriyordu.
  */
-function markKeepTogetherSections(root: HTMLElement): void {
+function markPageBreaks(root: HTMLElement): void {
+  const article = root.querySelector<HTMLElement>("article");
+  if (!article) return;
+  article.querySelectorAll(`[${PAGE_BREAK_ATTR}]`).forEach((el) => el.removeAttribute(PAGE_BREAK_ATTR));
+
   root.classList.add(MEASURING_CLASS);
   try {
-    root.querySelectorAll<HTMLElement>(".resume-page > section").forEach((section) => {
-      section.toggleAttribute(KEEP_TOGETHER_ATTR, section.offsetHeight <= CONTENT_HEIGHT_PX);
-    });
+    const { movedToNextPage } = paginate(article, PRINT_GEOMETRY);
+    resetPushes(article);
+    movedToNextPage.forEach((el) => el.setAttribute(PAGE_BREAK_ATTR, ""));
   } finally {
     root.classList.remove(MEASURING_CLASS);
   }
@@ -48,7 +53,7 @@ export async function printResume(fileName: string): Promise<void> {
   const root = document.getElementById(PRINT_ROOT_ID);
   if (root) {
     await ensureResumeFontsLoaded(root);
-    markKeepTogetherSections(root);
+    markPageBreaks(root);
   }
 
   const previousTitle = document.title;
