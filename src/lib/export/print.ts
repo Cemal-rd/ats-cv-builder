@@ -1,13 +1,16 @@
+import { CONTENT_HEIGHT_PX, KEEP_TOGETHER_ATTR } from "@/lib/resume/pagination";
+
 const PRINT_ROOT_ID = "print-root";
+const MEASURING_CLASS = "print-measuring";
 
 /**
  * Seçili CV yazı tipinin normal, kalın ve italik kesimlerinin yüklendiğinden emin olur.
  * Önizleme gizliyken (ör. mobilde "Düzenle" sekmesi) tarayıcı yazı tipini henüz
  * indirmemiş olabilir; beklemezsek PDF yedek yazı tipiyle çıkar.
  */
-async function ensureResumeFontsLoaded(): Promise<void> {
+async function ensureResumeFontsLoaded(root: HTMLElement): Promise<void> {
   if (!("fonts" in document)) return;
-  const article = document.getElementById(PRINT_ROOT_ID)?.querySelector("article");
+  const article = root.querySelector("article");
   const family = article ? getComputedStyle(article).fontFamily : "";
   if (family) {
     await Promise.allSettled(
@@ -15,6 +18,22 @@ async function ensureResumeFontsLoaded(): Promise<void> {
     );
   }
   await document.fonts.ready;
+}
+
+/**
+ * Bir sayfaya sığan bölümleri "bölünmez" olarak işaretler. Bu kural uzun bölümlere
+ * uygulanırsa tarayıcı bölümü önce yeni sayfaya iter ve önceki sayfa boş kalır;
+ * CSS yükseklik bilemediği için ölçüm burada, baskı düzeninde yapılır.
+ */
+function markKeepTogetherSections(root: HTMLElement): void {
+  root.classList.add(MEASURING_CLASS);
+  try {
+    root.querySelectorAll<HTMLElement>(".resume-page > section").forEach((section) => {
+      section.toggleAttribute(KEEP_TOGETHER_ATTR, section.offsetHeight <= CONTENT_HEIGHT_PX);
+    });
+  } finally {
+    root.classList.remove(MEASURING_CLASS);
+  }
 }
 
 /**
@@ -26,7 +45,11 @@ async function ensureResumeFontsLoaded(): Promise<void> {
  * document.title'dan türetir.
  */
 export async function printResume(fileName: string): Promise<void> {
-  await ensureResumeFontsLoaded();
+  const root = document.getElementById(PRINT_ROOT_ID);
+  if (root) {
+    await ensureResumeFontsLoaded(root);
+    markKeepTogetherSections(root);
+  }
 
   const previousTitle = document.title;
   document.title = fileName;

@@ -69,6 +69,25 @@
   color: #111827;
 }
 
+/*
+ * Yazdırmadan önce bölüm yüksekliklerini baskı düzeninde (174mm içerik genişliği,
+ * kenar boşluksuz) ölçmek için #print-root'u geçici olarak görünmez biçimde açar.
+ */
+#print-root.print-measuring {
+  display: block !important;
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 174mm;
+  visibility: hidden;
+}
+
+#print-root.print-measuring .resume-page {
+  width: auto;
+  min-height: 0;
+  padding: 0;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  PDF çıktısı: yalnızca #print-root yazdırılır                               */
 /* -------------------------------------------------------------------------- */
@@ -92,6 +111,20 @@
     width: auto;
     min-height: 0;
     padding: 0;
+  }
+
+  /*
+   * Sayfa sonu kuralları — önizleme simülasyonuyla (lib/resume/pagination.ts) aynı olmalı:
+   * sayfaya sığan bölüm bölünmez (yeni sayfa başlıkla başlar), uzun bölüm kayıtlar
+   * arasından bölünür, başlık tek başına sayfa sonunda kalmaz.
+   * "Sığan bölüm" işareti yazdırmadan hemen önce ölçülerek konur (lib/export/print.ts).
+   */
+  .resume-page > section[data-keep-together] {
+    break-inside: avoid;
+  }
+
+  .resume-page > section > div > * {
+    break-inside: avoid;
   }
 
   .resume-page h2,
