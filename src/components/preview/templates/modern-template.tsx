@@ -173,10 +173,12 @@ interface EntryProps {
 function Entry({ title, meta, subtitle, bullets }: EntryProps) {
   return (
     <div>
-      <div className="flex items-baseline justify-between gap-4">
-        <h3 className="font-semibold text-neutral-900">{title}</h3>
-        {meta && <span className="shrink-0 text-[9pt] text-slate-600">{meta}</span>}
-      </div>
+      {(title || meta) && (
+        <div className="flex items-baseline justify-between gap-4">
+          <h3 className="font-semibold text-neutral-900">{title}</h3>
+          {meta && <span className="shrink-0 text-[9pt] text-slate-600">{meta}</span>}
+        </div>
+      )}
       {subtitle && <p className="text-[9pt] text-slate-600">{subtitle}</p>}
       {bullets.length > 0 && (
         <ul className="mt-1 list-disc space-y-0.5 pl-5 marker:text-slate-500">

@@ -2,17 +2,26 @@ import { hasText } from "@/lib/utils";
 import type { PersonalInfo, Resume } from "@/lib/schema/resume";
 import type { ResumeLabels } from "./labels";
 
-const BULLET_PREFIX = /^\s*(?:[-–—•*▪●◦·]|\d+[.)]\s)\s*/;
+/**
+ * Madde işareti öneki. -: Word'ün Symbol/Wingdings madde işaretleri
+ * (PDF'ten içe aktarılan CV'lerde görünmez karakter olarak gelir).
+ */
+const BULLET_PREFIX = /^\s*(?:[-–—•*▪▫●○◦·■□➢➤►▶▸‣⁃∙✓✔❖◆◇★➔→-]|\d+[.)]\s)\s*/u;
+/** Özel kullanım alanı karakterleri: çıktıda kutu (□) olarak görünür, ATS'ler okuyamaz. */
+const PRIVATE_USE = /[-]/gu;
 
 /** Emoji ve emoji birleştiricileri (ZWJ, varyasyon seçicisi). */
 export const EMOJI_PATTERN = /[\p{Extended_Pictographic}\u{FE0F}\u{200D}\u{20E3}]/gu;
 
-/** Çok satırlı açıklamayı madde listesine çevirir; kullanıcının yazdığı "-" / "•" öneklerini temizler. */
+/**
+ * Çok satırlı açıklamayı madde listesine çevirir; kullanıcının yazdığı "-" / "•" öneklerini
+ * temizler. Yalnızca işaretten oluşan satırlar (boş madde) atlanır.
+ */
 export function toBullets(text: string): string[] {
   return text
     .split(/\r?\n/)
-    .map((line) => line.replace(BULLET_PREFIX, "").trim())
-    .filter(Boolean);
+    .map((line) => line.replace(PRIVATE_USE, " ").replace(BULLET_PREFIX, "").replace(BULLET_PREFIX, "").trim())
+    .filter((line) => /[\p{L}\p{N}]/u.test(line));
 }
 
 /** "React, Next.js; Git" → ["React", "Next.js", "Git"] */
@@ -118,6 +127,7 @@ export function sanitizeResumeForOutput(resume: Resume): Resume {
       if (key === "photo") return value;
       return value
         .replace(EMOJI_PATTERN, "")
+        .replace(PRIVATE_USE, "")
         .replace(/[ \t]{2,}/g, " ")
         .replace(/^[ \t]+|[ \t]+$/gm, "");
     }

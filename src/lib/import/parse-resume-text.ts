@@ -37,6 +37,7 @@ import {
   isAllCaps,
   isBulletLine,
   isContactLike,
+  isMarkerOnlyLine,
   LINKEDIN_RE,
   looksLikeLocation,
   looksLikeUnknownHeading,
@@ -147,8 +148,27 @@ function normalizeLines(raw: string): string[] {
     .replace(/[   \t]/g, " ")
     .replace(/[​﻿­]/g, "")
     .split("\n")
-    .map((line) => line.replace(/ {2,}/g, " ").trim())
-    .filter(Boolean);
+    .map((line) =>
+      line
+        // Word/Symbol madde işareti (ör. U+F0B7) → standart "•"; satır içindeki diğer
+        // özel kullanım karakterleri (telefon/e-posta ikonları) silinir.
+        .replace(/^\s*[-]\s*/u, "• ")
+        .replace(/[-]/gu, "")
+        .replace(/ {2,}/g, " ")
+        .trim(),
+    )
+    .filter(Boolean)
+    .reduce<string[]>((lines, line) => {
+      // Tek başına kalan madde işareti bir önceki satırdan taşmıştır; sonraki satırla birleşir.
+      const previous = lines[lines.length - 1];
+      if (previous !== undefined && isMarkerOnlyLine(previous) && !isMarkerOnlyLine(line)) {
+        lines[lines.length - 1] = `• ${line}`;
+      } else {
+        lines.push(line);
+      }
+      return lines;
+    }, [])
+    .filter((line) => !isMarkerOnlyLine(line));
 }
 
 /** Kişisel bilgi alanlarına aktarılan etiketli satırlar; bölümlere karışmasın. */

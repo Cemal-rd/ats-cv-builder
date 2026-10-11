@@ -32,10 +32,19 @@ export function toTitleCase(text: string): string {
 /*  Madde işaretleri ve ayırıcılar                                             */
 /* -------------------------------------------------------------------------- */
 
-const BULLET_RE = /^\s*(?:[•●○◦▪▫■□➢➤►▶✓✔❖◆◇*·]|[-–—](?=\s)|\d{1,2}[.)](?=\s))\s*/u;
+/**
+ * Madde işareti karakterleri. -: Özel Kullanım Alanı — Word'ün Symbol/Wingdings
+ * yazı tipiyle yazdığı madde işaretleri PDF'ten bu kodlarla (ör. U+F0B7 "") çıkar.
+ */
+export const BULLET_CHARS = "•●○◦▪▫■□➢➤►▶▸▹‣⁃∙◘✓✔☐☑❖◆◇★☆➔→⇒*·\\uE000-\\uF8FF";
+
+const BULLET_RE = new RegExp(`^\\s*(?:[${BULLET_CHARS}]|[-–—](?=\\s)|\\d{1,2}[.)](?=\\s))\\s*`, "u");
+const MARKER_ONLY_RE = new RegExp(`^[\\s${BULLET_CHARS}–—-]+$`, "u");
 
 export const isBulletLine = (line: string) => BULLET_RE.test(line) && line.replace(BULLET_RE, "").trim().length > 0;
 export const stripBullet = (line: string) => line.replace(BULLET_RE, "").trim();
+/** Yalnızca madde işaretinden oluşan satır ("•", ""): metni bir sonraki satırdadır. */
+export const isMarkerOnlyLine = (line: string) => MARKER_ONLY_RE.test(line);
 
 /** Başlık satırlarını parçalara ayırır: "Pozisyon | Şirket, Şehir", "Pozisyon – Şirket", "Role at Company". */
 export const PART_SEPARATOR = /\s*\|\s*|\s+[·•–—-]\s+|,\s+|\s+@\s+|\s+at\s+/u;

@@ -3,6 +3,8 @@
  * dosya hiçbir sunucuya gönderilmez. Kütüphaneler yalnızca gerektiğinde yüklenir.
  */
 
+import { BULLET_CHARS } from "./patterns";
+
 export type ImportFileKind = "pdf" | "docx" | "txt";
 
 export interface ExtractedText {
@@ -130,6 +132,7 @@ function itemsToText(items: PdfTextItem[]) {
   }
 
   rows.sort((a, b) => b.y - a.y);
+  attachOrphanBullets(rows);
   let gappedRows = 0;
 
   const lines = rows.map((row) => {
@@ -150,11 +153,42 @@ function itemsToText(items: PdfTextItem[]) {
       line += part.str;
       previousEnd = part.x + part.width;
     }
-    if (hasGap) gappedRows++;
-    return line.replace(/\s+/g, " ").trim();
+    // Madde işareti ile metin arasındaki girinti sütun boşluğu değildir.
+    const bulletIndent = /^•\s*\|\s*/.test(line);
+    if (hasGap && !bulletIndent) gappedRows++;
+    return line.replace(/^•\s*\|\s*/, "• ").replace(/\s+/g, " ").trim();
   });
 
   return { text: lines.filter(Boolean).join("\n"), rows: rows.length, gappedRows };
+}
+
+const MARKER_ONLY_RE = new RegExp(`^[\\s${BULLET_CHARS}–—-]+$`, "u");
+
+/**
+ * Word'den çıkan PDF'lerde madde işareti (Symbol yazı tipi) metinden biraz yukarıda ya da
+ * aşağıda durur ve ayrı bir satır gibi görünür. Bu yetim işareti, dikeyde en yakın ve
+ * işaretin sağından başlayan metin satırına taşır.
+ */
+function attachOrphanBullets(rows: PdfRow[]) {
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const row = rows[i];
+    if (!MARKER_ONLY_RE.test(row.parts.map((p) => p.str).join(""))) continue;
+
+    const markerX = Math.min(...row.parts.map((p) => p.x));
+    const candidates = [rows[i - 1], rows[i + 1]].filter(
+      (r): r is PdfRow =>
+        r !== undefined &&
+        !MARKER_ONLY_RE.test(r.parts.map((p) => p.str).join("")) &&
+        Math.abs(r.y - row.y) <= Math.max(r.height, row.height) * 1.2 &&
+        Math.min(...r.parts.map((p) => p.x)) > markerX,
+    );
+    if (candidates.length === 0) continue;
+
+    const target = candidates.reduce((best, r) => (Math.abs(r.y - row.y) < Math.abs(best.y - row.y) ? r : best));
+    // İşareti "•" olarak metnin önüne ekle; aradaki boşluk satır birleştirmede korunur.
+    target.parts.push(...row.parts.map((p) => ({ ...p, str: "•" })));
+    rows.splice(i, 1);
+  }
 }
 
 /* -------------------------------------------------------------------------- */
