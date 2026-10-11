@@ -1,5 +1,6 @@
 import { sanitizeResumeForOutput } from "@/lib/resume/format";
-import type { TemplateId } from "@/lib/schema/resume";
+import { getCvFontStack } from "@/lib/fonts/cv-fonts";
+import type { CvFontId, TemplateId } from "@/lib/schema/resume";
 import { ClassicTemplate } from "./classic-template";
 import { ModernTemplate } from "./modern-template";
 import type { TemplateDefinition, TemplateProps } from "./types";
@@ -21,7 +22,12 @@ export const TEMPLATES: Record<TemplateId, TemplateDefinition> = {
 };
 
 /** Tüm şablonlar emojilerden arındırılmış veriyle render edilir (önizleme = PDF). */
-export function TemplateRenderer({ template, resume, locale }: TemplateProps & { template: TemplateId }) {
+export function TemplateRenderer({
+  template,
+  font,
+  resume,
+  locale,
+}: Omit<TemplateProps, "fontFamily"> & { template: TemplateId; font: CvFontId }) {
   const Component = (TEMPLATES[template] ?? TEMPLATES.classic).component;
-  return <Component resume={sanitizeResumeForOutput(resume)} locale={locale} />;
+  return <Component resume={sanitizeResumeForOutput(resume)} locale={locale} fontFamily={getCvFontStack(font)} />;
 }

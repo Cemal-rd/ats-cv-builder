@@ -11,6 +11,24 @@ export type TemplateId = (typeof TEMPLATE_IDS)[number];
 export const RESUME_LOCALES = ["tr", "en"] as const;
 export type ResumeLocale = (typeof RESUME_LOCALES)[number];
 
+/** CV yazı tipleri — kayıt (etiket, CSS yığını) için bkz. lib/fonts/cv-fonts.ts. */
+export const CV_FONT_IDS = [
+  "template",
+  "arial",
+  "calibri",
+  "inter",
+  "roboto",
+  "open-sans",
+  "lato",
+  "source-sans",
+  "georgia",
+  "times",
+  "merriweather",
+  "lora",
+  "garamond",
+] as const;
+export type CvFontId = (typeof CV_FONT_IDS)[number];
+
 /** CEFR seviyeleri + ana dil. */
 export const LANGUAGE_LEVELS = ["native", "c2", "c1", "b2", "b1", "a2", "a1"] as const;
 export type LanguageLevel = (typeof LANGUAGE_LEVELS)[number];
@@ -212,5 +230,6 @@ export function parseResumeData(input: unknown): Resume | null {
 export const resumeSettingsSchema = z.object({
   template: z.enum(TEMPLATE_IDS),
   locale: z.enum(RESUME_LOCALES),
+  font: z.enum(CV_FONT_IDS),
 });
 export type ResumeSettings = z.infer<typeof resumeSettingsSchema>;

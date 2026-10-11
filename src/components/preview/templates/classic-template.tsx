@@ -17,7 +17,9 @@ import type { TemplateProps } from "./types";
  * Classic Corporate — serif, ortalanmış başlık, çizgili bölüm başlıkları.
  * Tek sütun, tablo/ikon yok: ATS'ler metni yukarıdan aşağı sırayla okur.
  */
-export function ClassicTemplate({ resume, locale }: TemplateProps) {
+const DEFAULT_FONT = 'Georgia, "Times New Roman", Times, serif';
+
+export function ClassicTemplate({ resume, locale, fontFamily = DEFAULT_FONT }: TemplateProps) {
   const t = resumeLabels[locale];
   const { personal } = resume;
   const data = selectFilledSections(resume);
@@ -125,7 +127,7 @@ export function ClassicTemplate({ resume, locale }: TemplateProps) {
   return (
     <article
       className="resume-page"
-      style={{ fontFamily: 'Georgia, "Times New Roman", Times, serif', fontSize: "10.5pt", lineHeight: 1.4 }}
+      style={{ fontFamily, fontSize: "10.5pt", lineHeight: 1.4 }}
     >
       <header className="flex items-center gap-5">
         {photo && <ResumePhoto src={photo} size="26mm" className="shrink-0 rounded-sm" />}

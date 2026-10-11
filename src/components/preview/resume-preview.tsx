@@ -16,6 +16,7 @@ export function ResumePreview() {
   const resume = useResumeStore((s) => s.resume);
   const template = useResumeStore((s) => s.template);
   const locale = useResumeStore((s) => s.locale);
+  const font = useResumeStore((s) => s.font);
 
   const container = useElementSize<HTMLDivElement>();
   const page = useElementSize<HTMLDivElement>();
@@ -33,7 +34,7 @@ export function ResumePreview() {
           className="relative origin-top-left shadow-xl ring-1 ring-black/5"
           style={{ width: A4_WIDTH_PX, transform: `scale(${scale})` }}
         >
-          <TemplateRenderer resume={resume} template={template} locale={locale} />
+          <TemplateRenderer resume={resume} template={template} font={font} locale={locale} />
           {Array.from({ length: pageCount - 1 }, (_, i) => (
             <PageBreakMarker key={i} top={(i + 1) * A4_HEIGHT_PX} page={i + 2} />
           ))}

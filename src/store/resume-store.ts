@@ -2,10 +2,12 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { createSampleResume } from "@/lib/schema/factories";
 import {
+  CV_FONT_IDS,
   parseResumeData,
   RESUME_LOCALES,
   type Resume,
   type ResumeLocale,
+  type CvFontId,
   type ResumeVersions,
   type TemplateId,
 } from "@/lib/schema/resume";
@@ -16,16 +18,18 @@ interface ResumeState {
   /** Her dil için ayrı CV içeriği (TR ve EN sürümleri bağımsızdır). */
   versions: ResumeVersions;
   template: TemplateId;
+  font: CvFontId;
   locale: ResumeLocale;
   jobDescription: string;
   setResume: (resume: Resume) => void;
   setTemplate: (template: TemplateId) => void;
+  setFont: (font: CvFontId) => void;
   setLocale: (locale: ResumeLocale) => void;
   setVersions: (versions: ResumeVersions) => void;
   setJobDescription: (text: string) => void;
 }
 
-type PersistedState = Pick<ResumeState, "resume" | "versions" | "template" | "locale" | "jobDescription">;
+type PersistedState = Pick<ResumeState, "resume" | "versions" | "template" | "font" | "locale" | "jobDescription">;
 
 /**
  * Uygulamanın tek doğruluk kaynağı. Form (react-hook-form) değişiklikleri
@@ -40,10 +44,12 @@ export const useResumeStore = create<ResumeState>()(
         resume: sample,
         versions: { tr: sample },
         template: "classic",
+        font: "template",
         locale: "tr",
         jobDescription: "",
         setResume: (resume) => set((s) => ({ resume, versions: { ...s.versions, [s.locale]: resume } })),
         setTemplate: (template) => set({ template }),
+        setFont: (font) => set({ font }),
         setLocale: (locale) => set({ locale }),
         setVersions: (versions) => set({ versions }),
         setJobDescription: (jobDescription) => set({ jobDescription }),
@@ -53,10 +59,11 @@ export const useResumeStore = create<ResumeState>()(
       name: "ats-cv-builder",
       version: 1,
       storage: createJSONStorage(() => localStorage),
-      partialize: ({ resume, versions, template, locale, jobDescription }): PersistedState => ({
+      partialize: ({ resume, versions, template, font, locale, jobDescription }): PersistedState => ({
         resume,
         versions,
         template,
+        font,
         locale,
         jobDescription,
       }),
@@ -71,7 +78,8 @@ export const useResumeStore = create<ResumeState>()(
           if (version) versions[key] = version;
         }
         versions[locale] = resume;
-        return { ...current, ...saved, locale, resume, versions };
+        const font = CV_FONT_IDS.includes(saved.font as CvFontId) ? (saved.font as CvFontId) : current.font;
+        return { ...current, ...saved, font, locale, resume, versions };
       },
     },
   ),

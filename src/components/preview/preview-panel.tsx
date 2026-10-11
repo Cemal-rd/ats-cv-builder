@@ -4,6 +4,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useSwitchLocale } from "@/hooks/use-switch-locale";
 import type { ResumeLocale, TemplateId } from "@/lib/schema/resume";
 import { useResumeStore } from "@/store/resume-store";
+import { FontSelect } from "./font-select";
 import { ResumePreview } from "./resume-preview";
 import { TEMPLATES } from "./templates";
 
@@ -23,12 +24,15 @@ export function PreviewPanel() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-background px-4 py-2">
-        <SegmentedControl<TemplateId>
-          ariaLabel="Şablon"
-          value={template}
-          options={TEMPLATE_OPTIONS}
-          onChange={setTemplate}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <SegmentedControl<TemplateId>
+            ariaLabel="Şablon"
+            value={template}
+            options={TEMPLATE_OPTIONS}
+            onChange={setTemplate}
+          />
+          <FontSelect />
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground" title="TR ve EN sürümler ayrı ayrı saklanır">
             CV sürümü

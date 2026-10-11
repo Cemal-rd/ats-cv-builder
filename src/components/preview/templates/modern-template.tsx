@@ -17,7 +17,9 @@ import type { TemplateProps } from "./types";
  * Modern Clean — sans-serif, sola hizalı, sade vurgu rengi.
  * Görsel hiyerarşi yalnızca tipografi ile kurulur; ATS uyumluluğu korunur.
  */
-export function ModernTemplate({ resume, locale }: TemplateProps) {
+const DEFAULT_FONT = "Arial, Helvetica, sans-serif";
+
+export function ModernTemplate({ resume, locale, fontFamily = DEFAULT_FONT }: TemplateProps) {
   const t = resumeLabels[locale];
   const { personal } = resume;
   const data = selectFilledSections(resume);
@@ -128,7 +130,7 @@ export function ModernTemplate({ resume, locale }: TemplateProps) {
   };
 
   return (
-    <article className="resume-page" style={{ fontFamily: "Arial, Helvetica, sans-serif", fontSize: "10pt", lineHeight: 1.45 }}>
+    <article className="resume-page" style={{ fontFamily, fontSize: "10pt", lineHeight: 1.45 }}>
       <header className="flex items-start justify-between gap-6">
         <div className="min-w-0 flex-1">
           <h1 className="text-[22pt] font-bold leading-tight tracking-tight text-neutral-900">
