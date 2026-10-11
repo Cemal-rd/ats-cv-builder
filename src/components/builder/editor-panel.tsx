@@ -11,7 +11,7 @@ import {
   Languages,
   LayoutList,
   RotateCcw,
-  Sparkles,
+  FileUp,
   User,
   Wrench,
   type LucideIcon,
@@ -30,7 +30,8 @@ import {
   resolveSectionOrder,
   type SectionKey,
 } from "@/lib/resume/sections";
-import { createCustomSection, createEmptyResume, createSampleResume } from "@/lib/schema/factories";
+import { CvImportDialog } from "@/components/import/cv-import-dialog";
+import { createCustomSection, createEmptyResume } from "@/lib/schema/factories";
 import type { BuiltinSectionKey, Resume } from "@/lib/schema/resume";
 import { useResumeStore } from "@/store/resume-store";
 import { AddSectionMenu } from "./custom-sections/add-section-menu";
@@ -103,6 +104,8 @@ export function EditorPanel() {
   };
 
   /** Mevcut veriyi geri alınabilir şekilde değiştirir. */
+  const [importOpen, setImportOpen] = useState(false);
+
   const replaceResume = (next: Resume, message: string) => {
     const previous = structuredClone(getValues());
     replace(next);
@@ -175,15 +178,16 @@ export function EditorPanel() {
       </p>
 
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => replaceResume(createSampleResume(), "Örnek CV yüklendi")}>
-          <Sparkles />
-          Örnek CV yükle
+        <Button variant="ghost" size="sm" onClick={() => setImportOpen(true)}>
+          <FileUp />
+          CV yükle (PDF / Word)
         </Button>
         <Button variant="ghost" size="sm" onClick={() => replaceResume(createEmptyResume(), "Form temizlendi")}>
           <RotateCcw />
           Formu temizle
         </Button>
       </div>
+      <CvImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }

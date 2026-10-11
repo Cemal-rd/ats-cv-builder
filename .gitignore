@@ -7,3 +7,5 @@ next-env.d.ts
 .env*.local
 .DS_Store
 .claude/
+# Derleme öncesi node_modules'tan kopyalanır (scripts/copy-pdf-worker.mjs)
+public/pdf.worker.min.mjs

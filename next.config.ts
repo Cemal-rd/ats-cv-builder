@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
   output: "export",
   basePath,
   trailingSlash: true,
+  // İstemci kodunun statik dosyalara (ör. PDF.js worker) doğru yoldan ulaşması için.
+  env: { NEXT_PUBLIC_BASE_PATH: basePath },
   images: { unoptimized: true },
 };
 
