@@ -8,7 +8,43 @@ const TURKISH_CHARS = /[çğıöşüÇĞİÖŞÜ]/;
 
 export const wordCount = (text: string) => (text.trim() ? text.trim().split(/\s+/).length : 0);
 
-export const clip = (text: string, max: number) => (text.length > max ? text.slice(0, max).trim() : text);
+/* Kısaltma günlüğü: içe aktarma sırasında hiçbir metin habersiz kesilmesin. */
+let clipLog: string[] | null = null;
+
+export function startClipLog() {
+  clipLog = [];
+}
+
+export function takeClipLog(): string[] {
+  const log = clipLog ?? [];
+  clipLog = null;
+  return log;
+}
+
+/**
+ * Metni sınıra sığdırır: çok satırlıysa satır sonundan, değilse kelime sınırından keser
+ * (kelime ortasından değil) ve kısaltmayı günlüğe yazar.
+ */
+export function clip(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const lineCut = text.lastIndexOf("\n", max);
+  const wordCut = text.lastIndexOf(" ", max);
+  const cut = lineCut > max * 0.5 ? lineCut : wordCut > max * 0.6 ? wordCut : max;
+  clipLog?.push(`"${text.slice(0, 45).replace(/\s+/g, " ")}…" (${text.length}/${max} karakter)`);
+  return text.slice(0, cut).replace(/[\s,;:–—-]+$/, "").trim();
+}
+
+/**
+ * Kayıt başlığı sınırı aşıyorsa fazlası kaybolmaz: kelime sınırından bölünür ve
+ * kalan kısım kaydın açıklamasının (maddelerin) başına eklenir.
+ */
+export function fitTitle(text: string, max: number, description: string[]): string {
+  if (text.length <= max) return text;
+  const wordCut = text.lastIndexOf(" ", max);
+  const head = text.slice(0, wordCut > max * 0.6 ? wordCut : max).trim();
+  description.unshift(text.slice(head.length).trim());
+  return head;
+}
 
 /** Hem Türkçe hem İngilizce küçük harf biçimi: "SKILLS" → "skills", "EĞİTİM" → "eğitim". */
 export function lowerVariants(text: string): string[] {

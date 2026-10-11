@@ -21,6 +21,7 @@ import type {
   Resume,
   SkillGroup,
 } from "@/lib/schema/resume";
+import { LIMITS } from "@/lib/schema/resume";
 import {
   clip,
   COMPANY_HINT,
@@ -32,6 +33,7 @@ import {
   findDateRange,
   findPhone,
   findUrls,
+  fitTitle,
   GPA_RE,
   INSTITUTION_HINT,
   isAllCaps,
@@ -43,7 +45,9 @@ import {
   looksLikeUnknownHeading,
   PART_SEPARATOR,
   stripBullet,
+  startClipLog,
   stripLanguageLevel,
+  takeClipLog,
   toTitleCase,
   wordCount,
   type DetectedHeading,
@@ -93,6 +97,7 @@ const LONG_SENTENCE_WORDS = 10;
 /* -------------------------------------------------------------------------- */
 
 export function parseResumeText(raw: string): ResumeImportResult {
+  startClipLog();
   const lines = normalizeLines(raw);
   const warnings: string[] = [];
   if (lines.join(" ").length < 80) {
@@ -120,7 +125,7 @@ export function parseResumeText(raw: string): ResumeImportResult {
 
   const summaryLines = byKind("summary");
   const fallbackSummary = blocks.length === 0 ? header.slice(personal.consumedHeaderLines) : header.filter((l) => wordCount(l) >= 12);
-  const summary = clip(joinParagraph(summaryLines.length ? summaryLines : fallbackSummary), 1500);
+  const summary = clip(joinParagraph(summaryLines.length ? summaryLines : fallbackSummary), LIMITS.summary);
 
   const resume: Resume = {
     personal: personal.info,
@@ -134,6 +139,13 @@ export function parseResumeText(raw: string): ResumeImportResult {
     customSections,
     sectionOrder: buildSectionOrder(blocks, customSections),
   };
+
+  const clipped = takeClipLog();
+  if (clipped.length) {
+    warnings.push(
+      `${clipped.length} metin karakter sınırını aştığı için kelime sınırından kısaltıldı; aktarımdan sonra kontrol edin: ${clipped.slice(0, 3).join(", ")}${clipped.length > 3 ? "…" : ""}`,
+    );
+  }
 
   return { resume, sections: summarizeSections(resume), warnings };
 }
@@ -255,11 +267,11 @@ function parsePersonal(header: string[], fullText: string) {
     headerSegments.find(looksLikeLocation) ?? headerSegments.find((s) => CITY_COMMA_REGION.test(s)) ?? "";
 
   const info: PersonalInfo = {
-    fullName: clip(fullName, 80),
-    title: clip(title, 100),
+    fullName: clip(fullName, LIMITS.fullName),
+    title: clip(title, LIMITS.text),
     email,
-    phone: clip(phone, 20),
-    location: clip(location.replace(/^(?:adres|address|konum|location)\s*:\s*/i, ""), 100),
+    phone: clip(phone, LIMITS.tiny),
+    location: clip(location.replace(/^(?:adres|address|konum|location)\s*:\s*/i, ""), LIMITS.text),
     linkedin: linkedin.replace(/\/$/, ""),
     website: website.replace(/\/$/, ""),
     photo: "",
@@ -274,7 +286,7 @@ function parsePersonal(header: string[], fullText: string) {
 /** "San Francisco, CA", "Lyon, France" — başlıktaki "Şehir, Bölge" kalıbı. */
 const CITY_COMMA_REGION = /^\p{Lu}[\p{L}.'-]*(?:\s\p{Lu}[\p{L}.'-]*){0,2},\s*\p{Lu}[\p{L}.'-]*(?:\s\p{Lu}[\p{L}.'-]*){0,2}$/u;
 
-const findLabeled = (text: string, pattern: RegExp) => clip(pattern.exec(text)?.[1]?.trim() ?? "", 30);
+const findLabeled = (text: string, pattern: RegExp) => clip(pattern.exec(text)?.[1]?.trim() ?? "", LIMITS.date);
 
 /* -------------------------------------------------------------------------- */
 /*  Kayıt bölme (deneyim, eğitim, proje, özel bölümler için ortak)             */
@@ -379,13 +391,14 @@ function parseExperience(lines: string[]): Experience[] {
 
     return {
       ...createExperience(),
-      position: clip(position, 100),
-      company: clip(company, 100),
-      location: clip(location, 100),
-      startDate: clip(entry.date?.start ?? "", 30),
-      endDate: clip(entry.date?.end ?? "", 30),
+      // Başlık önce işlenir: sınırı aşarsa fazlası açıklamaya taşınır (kaybolmaz).
+      position: fitTitle(position, LIMITS.text, entry.bullets),
+      company: clip(company, LIMITS.text),
+      location: clip(location, LIMITS.text),
+      startDate: clip(entry.date?.start ?? "", LIMITS.date),
+      endDate: clip(entry.date?.end ?? "", LIMITS.date),
       current: entry.date?.current ?? false,
-      description: description(entry, 3000),
+      description: description(entry, LIMITS.experienceDescription),
     };
   });
 }
@@ -420,14 +433,14 @@ function parseEducation(lines: string[]): Education[] {
 
     return {
       ...createEducation(),
-      institution: clip(institution, 100),
-      degree: clip(degree, 100),
-      field: clip(field, 100),
-      location: clip(location, 100),
-      startDate: clip(entry.date?.start ?? "", 30),
-      endDate: clip(entry.date?.current ? "" : entry.date?.end ?? "", 30),
-      gpa: clip(gpa.replace(/\s+/g, ""), 20),
-      description: clip(entry.bullets.filter((b) => !GPA_RE.test(b)).join("\n"), 1000),
+      institution: clip(institution, LIMITS.text),
+      degree: clip(degree, LIMITS.text),
+      field: clip(field, LIMITS.text),
+      location: clip(location, LIMITS.text),
+      startDate: clip(entry.date?.start ?? "", LIMITS.date),
+      endDate: clip(entry.date?.current ? "" : entry.date?.end ?? "", LIMITS.date),
+      gpa: clip(gpa.replace(/\s+/g, ""), LIMITS.tiny),
+      description: clip(entry.bullets.filter((b) => !GPA_RE.test(b)).join("\n"), LIMITS.educationDescription),
     };
   });
 }
@@ -439,12 +452,12 @@ function parseProjects(lines: string[]): Project[] {
     const rest = parts.filter((p) => !url || !url.includes(p.replace(/^https?:\/\//, "")));
     return {
       ...createProject(),
-      name: clip(rest[0] ?? "", 100),
-      role: clip(rest.slice(1).join(", "), 100),
+      name: fitTitle(rest[0] ?? "", LIMITS.text, entry.bullets),
+      role: clip(rest.slice(1).join(", "), LIMITS.text),
       url: url.replace(/\/$/, ""),
-      startDate: clip(entry.date?.start ?? "", 30),
-      endDate: clip(entry.date?.current ? "" : entry.date?.end ?? "", 30),
-      description: description(entry, 2000),
+      startDate: clip(entry.date?.start ?? "", LIMITS.date),
+      endDate: clip(entry.date?.current ? "" : entry.date?.end ?? "", LIMITS.date),
+      description: description(entry, LIMITS.projectDescription),
     };
   });
 }
@@ -457,13 +470,33 @@ function parseSkills(lines: string[]): SkillGroup[] {
     const line = stripBullet(raw);
     const labeled = /^([^:]{2,40}):\s*(.+)$/.exec(line);
     if (labeled && wordCount(labeled[1]) <= 4) {
-      groups.push({ ...createSkillGroup(), category: clip(labeled[1].trim(), 60), items: clip(splitItems(labeled[2]).join(", "), 500) });
+      const category = clip(labeled[1].trim(), LIMITS.label);
+      groups.push(...chunkItems(splitItems(labeled[2])).map((items) => ({ ...createSkillGroup(), category, items })));
     } else {
       loose.push(...splitItems(line));
     }
   }
-  if (loose.length) groups.unshift({ ...createSkillGroup(), items: clip([...new Set(loose)].join(", "), 500) });
+  if (loose.length) {
+    groups.unshift(...chunkItems([...new Set(loose)]).map((items) => ({ ...createSkillGroup(), items })));
+  }
   return groups;
+}
+
+/** Yetenekleri sınırı aşmayacak gruplara böler: uzun listede hiçbir yetenek kesilmez/kaybolmaz. */
+function chunkItems(items: string[]): string[] {
+  const chunks: string[] = [];
+  let current = "";
+  for (const item of items) {
+    const next = current ? `${current}, ${item}` : item;
+    if (next.length > LIMITS.skillItems && current) {
+      chunks.push(current);
+      current = item;
+    } else {
+      current = next;
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks;
 }
 
 const splitItems = (text: string) =>
@@ -484,7 +517,7 @@ function parseLanguages(lines: string[]): Language[] {
     const { level } = detectLanguageLevel(segment);
     const name = stripLanguageLevel(segment).replace(/\s+/g, " ").trim();
     if (!name || name.length > 25 || wordCount(name) > 3 || /\d/.test(name)) continue;
-    languages.push({ ...createLanguage(), name: clip(isAllCaps(name) ? toTitleCase(name) : name, 40), level });
+    languages.push({ ...createLanguage(), name: clip(isAllCaps(name) ? toTitleCase(name) : name, LIMITS.languageName), level });
   }
   return languages;
 }
@@ -506,21 +539,21 @@ function parseCertifications(lines: string[]): Certification[] {
     const parts = text.split(PART_SEPARATOR).map(trimPart).filter(Boolean);
     return {
       ...createCertification(),
-      name: clip(parts[0] ?? "", 120),
-      issuer: clip(parts.slice(1).join(", "), 100),
-      date: clip(date ? (date.current ? date.start : [date.start, date.end].filter(Boolean).join(" – ")) : "", 30),
+      name: clip(parts[0] ?? "", LIMITS.longTitle),
+      issuer: clip(parts.slice(1).join(", "), LIMITS.text),
+      date: clip(date ? (date.current ? date.start : [date.start, date.end].filter(Boolean).join(" – ")) : "", LIMITS.date),
       url: url.replace(/\/$/, ""),
     };
   });
 }
 
 function parseCustomSection(block: Block): CustomSection {
-  const section = createCustomSection(clip(block.title, 60), iconForTitle(block.title));
+  const section = createCustomSection(clip(block.title, LIMITS.label), iconForTitle(block.title));
   const hasStructure = block.lines.some((l) => isBulletLine(l) || findDateRange(l));
 
   // Basit liste (hobiler, referans adları…): her satır bir kayıt.
   if (!hasStructure) {
-    section.entries = block.lines.map((line) => ({ ...createCustomEntry(), title: clip(line, 120) }));
+    section.entries = block.lines.map((line) => ({ ...createCustomEntry(), title: clip(line, LIMITS.longTitle) }));
     return section;
   }
 
@@ -528,10 +561,10 @@ function parseCustomSection(block: Block): CustomSection {
     const parts = headerParts(entry);
     return {
       ...createCustomEntry(),
-      title: clip(parts[0] ?? "", 120),
-      subtitle: clip(parts.slice(1).join(", "), 120),
-      date: clip(entry.date ? [entry.date.start, entry.date.current ? "" : entry.date.end].filter(Boolean).join(" – ") : "", 30),
-      description: description(entry, 2000),
+      title: fitTitle(parts[0] ?? "", LIMITS.longTitle, entry.bullets),
+      subtitle: clip(parts.slice(1).join(", "), LIMITS.longTitle),
+      date: clip(entry.date ? [entry.date.start, entry.date.current ? "" : entry.date.end].filter(Boolean).join(" – ") : "", LIMITS.date),
+      description: description(entry, LIMITS.customDescription),
     };
   });
   return section;
@@ -570,7 +603,7 @@ function buildSectionOrder(blocks: Block[], customSections: CustomSection[]): st
     if (block.kind === "summary") continue;
     if (block.kind === "custom") {
       const section = customSections[customIndex];
-      if (section && section.title === clip(block.title, 60)) {
+      if (section && section.title === clip(block.title, LIMITS.label)) {
         order.push(customSectionKey(section.id));
         customIndex++;
       }
