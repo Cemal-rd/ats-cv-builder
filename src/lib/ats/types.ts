@@ -6,6 +6,8 @@ export interface AnalyzedBullet {
   text: string;
   /** Hangi kayda ait olduğu (ör. pozisyon adı) — ipuçlarında kullanılır. */
   source: string;
+  /** Kaydın içindeki sırası (1'den başlar) — ipuçlarında "2. madde" olarak gösterilir. */
+  position: number;
   wordCount: number;
   hasActionVerb: boolean;
   isQuantified: boolean;

@@ -7,10 +7,11 @@ import type { AnalyzedBullet, AtsContext, AtsReport, AtsRule } from "./types";
 
 const NUMBER_PATTERN = /\d/;
 
-function analyzeBullet(text: string, source: string): AnalyzedBullet {
+function analyzeBullet(text: string, source: string, position: number): AnalyzedBullet {
   return {
     text,
     source,
+    position,
     wordCount: countWords(text),
     hasActionVerb: hasActionVerb(text),
     isQuantified: NUMBER_PATTERN.test(text),
@@ -21,9 +22,9 @@ function analyzeBullet(text: string, source: string): AnalyzedBullet {
 function buildContext(resume: Resume, locale: ResumeLocale): AtsContext {
   const bullets = [
     ...resume.experience.flatMap((e) =>
-      toBullets(e.description).map((b) => analyzeBullet(b, e.position || e.company)),
+      toBullets(e.description).map((b, i) => analyzeBullet(b, e.position || e.company, i + 1)),
     ),
-    ...resume.projects.flatMap((p) => toBullets(p.description).map((b) => analyzeBullet(b, p.name))),
+    ...resume.projects.flatMap((p) => toBullets(p.description).map((b, i) => analyzeBullet(b, p.name, i + 1))),
   ];
   return { resume, locale, bullets };
 }

@@ -139,7 +139,8 @@ const bulletDensityRule: AtsRule = {
     const shortBullets = bullets.filter((b) => b.wordCount < BULLET_WORDS.min);
     const lengthRatio = (bullets.length - longBullets.length - shortBullets.length) / bullets.length;
     // Hangi madde olduğu görülsün: kayıt adı + maddenin başı + kelime sayısı.
-    const describe = (b: AnalyzedBullet) => `${b.source ? `${b.source}: ` : ""}"${truncate(b.text, 55)}" (${b.wordCount} kelime)`;
+    const describe = (b: AnalyzedBullet) =>
+      `${b.source ? `${b.source}, ` : ""}${b.position}. madde: "${truncate(b.text, 55)}" (${b.wordCount} kelime)`;
     longBullets.slice(0, 3).forEach((b) => tips.push(`Uzun madde, ikiye bölmeyi düşünün → ${describe(b)}`));
     shortBullets.slice(0, 3).forEach((b) => tips.push(`Kısa madde, bağlam ve sonuç ekleyin → ${describe(b)}`));
     const hidden = Math.max(0, longBullets.length - 3) + Math.max(0, shortBullets.length - 3);
@@ -172,7 +173,9 @@ const actionVerbRule: AtsRule = {
     if (weak.length) {
       tips.push(`"${weak.join('", "')}" gibi pasif ifadeler yerine "geliştirdim", "yönettim", "Led", "Built" gibi fiiller kullanın.`);
     }
-    examples.forEach((b) => tips.push(`Güçlendirin: "${truncate(b.text)}"`));
+    examples.forEach((b) =>
+      tips.push(`Güçlendirin → ${b.source ? `${b.source}, ` : ""}${b.position}. madde: "${truncate(b.text)}"`),
+    );
 
     return {
       score: Math.round(15 * Math.min(1, ratio / ACTION_VERB_TARGET)),
