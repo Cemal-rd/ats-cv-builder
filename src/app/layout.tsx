@@ -7,9 +7,15 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-sans" });
 
+const SITE_TITLE = "ATS Uyumlu CV Oluşturucu – Ücretsiz, Üyeliksiz";
+const SITE_DESCRIPTION =
+  "İşe alım sistemlerinin (ATS) okuyabildiği profesyonel CV'ni ücretsiz hazırla: canlı ATS puanı, iş ilanı eşleştirme, PDF/Word'den CV yükleme ve tek tıkla PDF. Bilgilerin cihazından çıkmaz.";
+
 export const metadata: Metadata = {
-  title: "ATS CV Builder",
-  description: "ATS uyumlu CV oluşturun, analiz edin ve iş ilanına göre optimize edin.",
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  // WhatsApp, LinkedIn vb. link önizlemelerinde görünen başlık ve açıklama.
+  openGraph: { title: SITE_TITLE, description: SITE_DESCRIPTION, type: "website", locale: "tr_TR" },
 };
 
 export const viewport: Viewport = {

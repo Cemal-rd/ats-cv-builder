@@ -70,12 +70,21 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
   };
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b bg-background px-4">
-      <div className="flex items-center gap-2">
-        <span className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3 sm:gap-3 sm:px-4">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="hidden h-8 w-8 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground sm:grid">
           <FileText className="h-4 w-4" />
         </span>
-        <span className="hidden font-semibold tracking-tight sm:inline">ATS CV Builder</span>
+        {/* Sitenin ne olduğu ilk bakışta anlaşılsın: ad + tek cümlelik açıklama. */}
+        <div className="min-w-0 leading-tight">
+          <h1 className="truncate text-sm font-semibold tracking-tight">
+            <span className="sm:hidden">CV Oluşturucu</span>
+            <span className="hidden sm:inline">ATS Uyumlu CV Oluşturucu</span>
+          </h1>
+          <p className="hidden truncate text-[11px] text-muted-foreground lg:block">
+            İşe alım sistemlerine takılmayan CV&apos;ni hazırla · Ücretsiz, üyeliksiz
+          </p>
+        </div>
       </div>
 
       <button
@@ -97,15 +106,15 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
           className="hidden"
           onChange={handleImport}
         />
-        <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} aria-label="JSON içe aktar">
+        <Button variant="ghost" size="sm" className="px-2 sm:px-3" onClick={() => fileInputRef.current?.click()} aria-label="JSON içe aktar">
           <FileUp />
           <span className="hidden md:inline">İçe aktar</span>
         </Button>
-        <Button variant="ghost" size="sm" onClick={handleExportJson} aria-label="JSON olarak yedekle">
+        <Button variant="ghost" size="sm" className="px-2 sm:px-3" onClick={handleExportJson} aria-label="JSON olarak yedekle">
           <Save />
           <span className="hidden md:inline">Yedekle</span>
         </Button>
-        <Button size="sm" onClick={handleDownloadPdf}>
+        <Button size="sm" className="px-2 sm:px-3" onClick={handleDownloadPdf}>
           <FileDown />
           <span className="hidden sm:inline">PDF indir</span>
         </Button>
