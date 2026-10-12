@@ -40,7 +40,7 @@ export function formatDateRange(start: string, end: string, current: boolean, pr
 }
 
 export function displayUrl(url: string): string {
-  return url.trim().replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, "");
+  return url.trim().replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, "");
 }
 
 /**
@@ -50,6 +50,33 @@ export function displayUrl(url: string): string {
 export function toHref(url: string): string {
   const trimmed = url.trim();
   return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+/** Bilinen platformlar CV'de adres yerine adıyla gösterilir (bağlantı tıklanabilir kalır). */
+const PLATFORM_LABELS: [RegExp, string][] = [
+  [/(^|\.)linkedin\.com$/i, "LinkedIn"],
+  // github.io bilinçli olarak yok: GitHub Pages'teki kişisel site adresiyle gösterilir.
+  [/(^|\.)github\.com$/i, "GitHub"],
+  [/(^|\.)gitlab\.com$/i, "GitLab"],
+  [/(^|\.)bitbucket\.org$/i, "Bitbucket"],
+  [/(^|\.)behance\.net$/i, "Behance"],
+  [/(^|\.)dribbble\.com$/i, "Dribbble"],
+  [/(^|\.)medium\.com$/i, "Medium"],
+  [/(^|\.)kaggle\.com$/i, "Kaggle"],
+  [/(^|\.)stackoverflow\.com$/i, "Stack Overflow"],
+  [/(^|\.)youtube\.com$|^youtu\.be$/i, "YouTube"],
+  [/(^|\.)(x|twitter)\.com$/i, "X"],
+  [/(^|\.)credly\.com$/i, "Credly"],
+];
+
+/**
+ * Bağlantının CV'de görünen metni: bilinen platformlar için platform adı ("LinkedIn",
+ * "GitHub"), kişisel alan adı için adresin kendisi ("cemalordu.com").
+ */
+export function linkLabel(url: string): string {
+  const shown = displayUrl(url);
+  const host = shown.split("/")[0].toLowerCase();
+  return PLATFORM_LABELS.find(([pattern]) => pattern.test(host))?.[1] ?? shown;
 }
 
 export interface ContactItem {
@@ -67,9 +94,9 @@ export function getContactItems(personal: PersonalInfo): ContactItem[] {
   if (email) items.push({ text: email, href: `mailto:${email}` });
   if (phone) items.push({ text: phone, href: `tel:${phone.replace(/[^\d+]/g, "")}` });
   if (location) items.push({ text: location });
-  for (const url of [personal.linkedin, personal.website]) {
-    if (url.trim()) items.push({ text: displayUrl(url), href: toHref(url) });
-  }
+  // LinkedIn alanı her zaman "LinkedIn" yazar; web sitesi platformsa adı, kişisel siteyse adresi.
+  if (personal.linkedin.trim()) items.push({ text: "LinkedIn", href: toHref(personal.linkedin) });
+  if (personal.website.trim()) items.push({ text: linkLabel(personal.website), href: toHref(personal.website) });
   return items;
 }
 

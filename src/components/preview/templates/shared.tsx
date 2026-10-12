@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { displayUrl, toHref, type ContactItem, type FilledSections } from "@/lib/resume/format";
+import { linkLabel, toHref, type ContactItem, type FilledSections } from "@/lib/resume/format";
 import { customSectionIdFromKey, isCustomSectionKey, resolveSectionOrder } from "@/lib/resume/sections";
 import type { BuiltinSectionKey, Resume } from "@/lib/schema/resume";
 import { cn } from "@/lib/utils";
@@ -17,9 +17,9 @@ export function ResumeLink({ href, children }: { href: string; children: React.R
   );
 }
 
-/** Web adresini bağlantı olarak gösterir: "https://github.com/x/" → "github.com/x". */
+/** Web adresini bağlantı olarak gösterir: platformsa adıyla ("GitHub"), kişisel siteyse adresiyle. */
 export function UrlLink({ url }: { url: string }) {
-  return <ResumeLink href={toHref(url)}>{displayUrl(url)}</ResumeLink>;
+  return <ResumeLink href={toHref(url)}>{linkLabel(url)}</ResumeLink>;
 }
 
 /**
