@@ -1,9 +1,9 @@
-import { sanitizeResumeForOutput } from "@/lib/resume/format";
 import { getCvFontStack } from "@/lib/fonts/cv-fonts";
-import type { CvFontId, TemplateId } from "@/lib/schema/resume";
+import { getPhoto, sanitizeResumeForOutput } from "@/lib/resume/format";
+import type { CvFontId, HeaderLayout, TemplateId } from "@/lib/schema/resume";
 import { ClassicTemplate } from "./classic-template";
 import { ModernTemplate } from "./modern-template";
-import type { TemplateDefinition, TemplateProps } from "./types";
+import { resolveHeaderLayout, type TemplateDefinition, type TemplateProps } from "./types";
 
 /** Yeni bir şablon eklemek için: bileşeni yazın, TEMPLATE_IDS'e ekleyin ve buraya kaydedin. */
 export const TEMPLATES: Record<TemplateId, TemplateDefinition> = {
@@ -11,12 +11,15 @@ export const TEMPLATES: Record<TemplateId, TemplateDefinition> = {
     id: "classic",
     name: "Classic Corporate",
     description: "Serif yazı tipi, ortalanmış başlık, geleneksel kurumsal düzen.",
+    // Fotoğrafsız: isim ortada. Fotoğraflı: fotoğraf solda, isim yanında sola hizalı.
+    defaultHeader: (hasPhoto) => ({ align: hasPhoto ? "left" : "center", photoSide: "left" }),
     component: ClassicTemplate,
   },
   modern: {
     id: "modern",
     name: "Modern Clean",
     description: "Sans-serif, sola hizalı, sade ve ferah düzen.",
+    defaultHeader: () => ({ align: "left", photoSide: "right" }),
     component: ModernTemplate,
   },
 };
@@ -25,9 +28,19 @@ export const TEMPLATES: Record<TemplateId, TemplateDefinition> = {
 export function TemplateRenderer({
   template,
   font,
+  header,
   resume,
   locale,
-}: Omit<TemplateProps, "fontFamily"> & { template: TemplateId; font: CvFontId }) {
-  const Component = (TEMPLATES[template] ?? TEMPLATES.classic).component;
-  return <Component resume={sanitizeResumeForOutput(resume)} locale={locale} fontFamily={getCvFontStack(font)} />;
+}: Pick<TemplateProps, "resume" | "locale"> & { template: TemplateId; font: CvFontId; header: HeaderLayout }) {
+  const definition = TEMPLATES[template] ?? TEMPLATES.classic;
+  const Component = definition.component;
+  const layout = resolveHeaderLayout(header, definition, Boolean(getPhoto(resume.personal)));
+  return (
+    <Component
+      resume={sanitizeResumeForOutput(resume)}
+      locale={locale}
+      header={layout}
+      fontFamily={getCvFontStack(font)}
+    />
+  );
 }

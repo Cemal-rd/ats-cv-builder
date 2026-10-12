@@ -252,9 +252,21 @@ export function parseResumeData(input: unknown): Resume | null {
   return parsed.success ? parsed.data : null;
 }
 
+/** CV başlığı: isim hizası ve fotoğrafın yeri. "auto" → şablonun kendi düzeni. */
+export const HEADER_ALIGNS = ["auto", "left", "center"] as const;
+export const PHOTO_SIDES = ["auto", "left", "right"] as const;
+
+export const headerLayoutSchema = z.object({
+  align: z.enum(HEADER_ALIGNS),
+  photo: z.enum(PHOTO_SIDES),
+});
+export type HeaderLayout = z.infer<typeof headerLayoutSchema>;
+export const DEFAULT_HEADER_LAYOUT: HeaderLayout = { align: "auto", photo: "auto" };
+
 export const resumeSettingsSchema = z.object({
   template: z.enum(TEMPLATE_IDS),
   locale: z.enum(RESUME_LOCALES),
   font: z.enum(CV_FONT_IDS),
+  header: headerLayoutSchema,
 });
 export type ResumeSettings = z.infer<typeof resumeSettingsSchema>;

@@ -1,6 +1,6 @@
 import { EMOJI_PATTERN, resumeToPlainText, splitList, toBullets } from "@/lib/resume/format";
 import { countWords, hasText } from "@/lib/utils";
-import type { AtsRule, CheckStatus } from "./types";
+import type { AnalyzedBullet, AtsRule, CheckStatus } from "./types";
 
 const IDEAL_BULLETS = { min: 3, max: 6 };
 const BULLET_WORDS = { min: 6, max: 35 };
@@ -135,11 +135,15 @@ const bulletDensityRule: AtsRule = {
     });
     const density = densityScores.reduce((a, b) => a + b, 0) / entries.length;
 
-    const tooLong = bullets.filter((b) => b.wordCount > BULLET_WORDS.max).length;
-    const tooShort = bullets.filter((b) => b.wordCount < BULLET_WORDS.min).length;
-    const lengthRatio = (bullets.length - tooLong - tooShort) / bullets.length;
-    if (tooLong) tips.push(`${tooLong} madde ${BULLET_WORDS.max} kelimeden uzun; ikiye bölmeyi düşünün.`);
-    if (tooShort) tips.push(`${tooShort} madde çok kısa; bağlam ve sonuç ekleyin.`);
+    const longBullets = bullets.filter((b) => b.wordCount > BULLET_WORDS.max);
+    const shortBullets = bullets.filter((b) => b.wordCount < BULLET_WORDS.min);
+    const lengthRatio = (bullets.length - longBullets.length - shortBullets.length) / bullets.length;
+    // Hangi madde olduğu görülsün: kayıt adı + maddenin başı + kelime sayısı.
+    const describe = (b: AnalyzedBullet) => `${b.source ? `${b.source}: ` : ""}"${truncate(b.text, 55)}" (${b.wordCount} kelime)`;
+    longBullets.slice(0, 3).forEach((b) => tips.push(`Uzun madde, ikiye bölmeyi düşünün → ${describe(b)}`));
+    shortBullets.slice(0, 3).forEach((b) => tips.push(`Kısa madde, bağlam ve sonuç ekleyin → ${describe(b)}`));
+    const hidden = Math.max(0, longBullets.length - 3) + Math.max(0, shortBullets.length - 3);
+    if (hidden) tips.push(`…ve ${hidden} madde daha.`);
 
     const score = Math.round(density * 10 + lengthRatio * 5);
     return {

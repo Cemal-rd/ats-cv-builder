@@ -10,7 +10,7 @@ import {
   splitList,
   toBullets,
 } from "@/lib/resume/format";
-import { OrderedSections, ResumePhoto, type SectionRenderers } from "./shared";
+import { OrderedSections, ResumeHeader, type SectionRenderers } from "./shared";
 import type { TemplateProps } from "./types";
 
 /**
@@ -19,7 +19,7 @@ import type { TemplateProps } from "./types";
  */
 const DEFAULT_FONT = "Arial, Helvetica, sans-serif";
 
-export function ModernTemplate({ resume, locale, fontFamily = DEFAULT_FONT }: TemplateProps) {
+export function ModernTemplate({ resume, locale, header, fontFamily = DEFAULT_FONT }: TemplateProps) {
   const t = resumeLabels[locale];
   const { personal } = resume;
   const data = selectFilledSections(resume);
@@ -131,17 +131,14 @@ export function ModernTemplate({ resume, locale, fontFamily = DEFAULT_FONT }: Te
 
   return (
     <article className="resume-page" style={{ fontFamily, fontSize: "10pt", lineHeight: 1.45 }}>
-      <header className="flex items-start justify-between gap-6">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-[22pt] font-bold leading-tight tracking-tight text-neutral-900">
-            {personal.fullName || t.namePlaceholder}
-          </h1>
-          {personal.title && <p className="mt-0.5 text-[12pt] font-medium text-slate-600">{personal.title}</p>}
-          {contacts.length > 0 && <p className="mt-2 text-[9pt] text-neutral-700">{contacts.join(" · ")}</p>}
-          {details.length > 0 && <p className="mt-0.5 text-[9pt] text-neutral-700">{details.join(" · ")}</p>}
-        </div>
-        {photo && <ResumePhoto src={photo} size="27mm" className="shrink-0 rounded-md" />}
-      </header>
+      <ResumeHeader layout={header} photo={photo} photoSize="27mm" photoClassName="rounded-md">
+        <h1 className="text-[22pt] font-bold leading-tight tracking-tight text-neutral-900">
+          {personal.fullName || t.namePlaceholder}
+        </h1>
+        {personal.title && <p className="mt-0.5 text-[12pt] font-medium text-slate-600">{personal.title}</p>}
+        {contacts.length > 0 && <p className="mt-2 text-[9pt] text-neutral-700">{contacts.join(" · ")}</p>}
+        {details.length > 0 && <p className="mt-0.5 text-[9pt] text-neutral-700">{details.join(" · ")}</p>}
+      </ResumeHeader>
 
       {data.summary && (
         <Section title={t.summary}>

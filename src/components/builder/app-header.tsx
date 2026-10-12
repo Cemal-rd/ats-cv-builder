@@ -28,9 +28,9 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
   const tone = scoreTone(score);
 
   const handleExportJson = () => {
-    const { resume, versions, template, font, locale } = useResumeStore.getState();
+    const { resume, versions, template, font, header, locale } = useResumeStore.getState();
     downloadJson(
-      createBackup(resume, versions, { template, font, locale }),
+      createBackup(resume, versions, { template, font, header, locale }),
       `${buildFileName(resume.personal.fullName)}.json`,
     );
     toast.success("Yedek indirildi", { description: "JSON dosyasını daha sonra içe aktarabilirsiniz." });
@@ -50,6 +50,7 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
     const locale = result.settings?.locale ?? currentLocale;
     if (result.settings?.template) setTemplate(result.settings.template);
     if (result.settings?.font) useResumeStore.getState().setFont(result.settings.font);
+    if (result.settings?.header) useResumeStore.getState().setHeader(result.settings.header);
     setLocale(locale);
     setVersions(result.versions ?? { [locale]: result.resume });
     replaceResume(result.versions?.[locale] ?? result.resume);

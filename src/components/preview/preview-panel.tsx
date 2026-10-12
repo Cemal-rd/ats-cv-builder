@@ -5,6 +5,7 @@ import { useSwitchLocale } from "@/hooks/use-switch-locale";
 import type { ResumeLocale, TemplateId } from "@/lib/schema/resume";
 import { useResumeStore } from "@/store/resume-store";
 import { FontSelect } from "./font-select";
+import { HeaderLayoutPicker } from "./header-layout-picker";
 import { ResumePreview } from "./resume-preview";
 import { TEMPLATES } from "./templates";
 
@@ -32,6 +33,7 @@ export function PreviewPanel() {
             onChange={setTemplate}
           />
           <FontSelect />
+          <HeaderLayoutPicker />
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground" title="TR ve EN sürümler ayrı ayrı saklanır">
