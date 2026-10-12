@@ -1,6 +1,5 @@
 import { resumeLabels } from "@/lib/resume/labels";
 import {
-  displayUrl,
   formatDateRange,
   getContactItems,
   getPersonalDetails,
@@ -9,8 +8,9 @@ import {
   selectFilledSections,
   splitList,
   toBullets,
+  toHref,
 } from "@/lib/resume/format";
-import { OrderedSections, ResumeHeader, type SectionRenderers } from "./shared";
+import { ContactLine, OrderedSections, ResumeHeader, ResumeLink, UrlLink, type SectionRenderers } from "./shared";
 import type { TemplateProps } from "./types";
 
 /**
@@ -91,7 +91,7 @@ export function ModernTemplate({ resume, locale, header, fontFamily = DEFAULT_FO
                 key={item.id}
                 title={joinNonEmpty([item.name, item.role], " — ")}
                 meta={formatDateRange(item.startDate, item.endDate, false, t.present)}
-                subtitle={displayUrl(item.url)}
+                subtitle={item.url ? <UrlLink url={item.url} /> : undefined}
                 bullets={toBullets(item.description)}
               />
             ))}
@@ -105,7 +105,13 @@ export function ModernTemplate({ resume, locale, header, fontFamily = DEFAULT_FO
                 const meta = joinNonEmpty([item.issuer, item.date], ", ");
                 return (
                   <li key={item.id}>
-                    <span className="font-semibold">{item.name}</span>
+                    {item.url ? (
+                      <ResumeLink href={toHref(item.url)}>
+                        <span className="font-semibold">{item.name}</span>
+                      </ResumeLink>
+                    ) : (
+                      <span className="font-semibold">{item.name}</span>
+                    )}
                     {meta && ` — ${meta}`}
                   </li>
                 );
@@ -136,7 +142,7 @@ export function ModernTemplate({ resume, locale, header, fontFamily = DEFAULT_FO
           {personal.fullName || t.namePlaceholder}
         </h1>
         {personal.title && <p className="mt-0.5 text-[12pt] font-medium text-slate-600">{personal.title}</p>}
-        {contacts.length > 0 && <p className="mt-2 text-[9pt] text-neutral-700">{contacts.join(" · ")}</p>}
+        {contacts.length > 0 && <ContactLine items={contacts} separator=" · " className="mt-2 text-[9pt] text-neutral-700" />}
         {details.length > 0 && <p className="mt-0.5 text-[9pt] text-neutral-700">{details.join(" · ")}</p>}
       </ResumeHeader>
 
@@ -163,7 +169,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 interface EntryProps {
   title: string;
   meta?: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   bullets: string[];
 }
 

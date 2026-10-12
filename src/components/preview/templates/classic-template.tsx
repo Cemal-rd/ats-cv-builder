@@ -1,6 +1,5 @@
 import { resumeLabels } from "@/lib/resume/labels";
 import {
-  displayUrl,
   formatDateRange,
   getContactItems,
   getPersonalDetails,
@@ -9,8 +8,9 @@ import {
   selectFilledSections,
   splitList,
   toBullets,
+  toHref,
 } from "@/lib/resume/format";
-import { OrderedSections, ResumeHeader, type SectionRenderers } from "./shared";
+import { ContactLine, OrderedSections, ResumeHeader, ResumeLink, UrlLink, type SectionRenderers } from "./shared";
 import type { TemplateProps } from "./types";
 
 /**
@@ -88,7 +88,15 @@ export function ClassicTemplate({ resume, locale, header, fontFamily = DEFAULT_F
                 key={item.id}
                 title={item.name}
                 meta={formatDateRange(item.startDate, item.endDate, false, t.present)}
-                subtitle={joinNonEmpty([item.role, displayUrl(item.url)], " — ")}
+                subtitle={
+                  item.role || item.url ? (
+                    <>
+                      {item.role}
+                      {item.role && item.url && " — "}
+                      {item.url && <UrlLink url={item.url} />}
+                    </>
+                  ) : undefined
+                }
                 bullets={toBullets(item.description)}
               />
             ))}
@@ -100,7 +108,13 @@ export function ClassicTemplate({ resume, locale, header, fontFamily = DEFAULT_F
             <ul className="list-disc space-y-0.5 pl-5">
               {data.certifications.map((item) => (
                 <li key={item.id}>
-                  <strong>{item.name}</strong>
+                  {item.url ? (
+                    <ResumeLink href={toHref(item.url)}>
+                      <strong>{item.name}</strong>
+                    </ResumeLink>
+                  ) : (
+                    <strong>{item.name}</strong>
+                  )}
                   {item.issuer && ` — ${item.issuer}`}
                   {item.date && ` (${item.date})`}
                 </li>
@@ -132,7 +146,7 @@ export function ClassicTemplate({ resume, locale, header, fontFamily = DEFAULT_F
       <ResumeHeader layout={header} photo={photo} photoSize="26mm" photoClassName="rounded-sm">
         <h1 className="text-[20pt] font-bold leading-tight tracking-wide">{personal.fullName || t.namePlaceholder}</h1>
         {personal.title && <p className="mt-0.5 text-[11.5pt]">{personal.title}</p>}
-        {contacts.length > 0 && <p className="mt-1.5 text-[9.5pt]">{contacts.join("  |  ")}</p>}
+        {contacts.length > 0 && <ContactLine items={contacts} separator="  |  " className="mt-1.5 text-[9.5pt]" />}
         {details.length > 0 && <p className="mt-0.5 text-[9.5pt]">{details.join("  |  ")}</p>}
       </ResumeHeader>
 
@@ -159,7 +173,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 interface EntryProps {
   title: string;
   meta?: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   subMeta?: string;
   bullets: string[];
 }

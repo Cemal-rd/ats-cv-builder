@@ -1,9 +1,46 @@
 import { Fragment } from "react";
-import type { FilledSections } from "@/lib/resume/format";
+import { displayUrl, toHref, type ContactItem, type FilledSections } from "@/lib/resume/format";
 import { customSectionIdFromKey, isCustomSectionKey, resolveSectionOrder } from "@/lib/resume/sections";
 import type { BuiltinSectionKey, Resume } from "@/lib/schema/resume";
 import { cn } from "@/lib/utils";
 import type { ResolvedHeaderLayout } from "./types";
+
+/**
+ * CV içindeki bağlantı: metin rengini korur (CV'nin görünümü değişmez), önizlemede yeni
+ * sekmede açılır, PDF'te tıklanabilir kalır. ATS'ler metni düz metin olarak okur.
+ */
+export function ResumeLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-inherit no-underline hover:underline">
+      {children}
+    </a>
+  );
+}
+
+/** Web adresini bağlantı olarak gösterir: "https://github.com/x/" → "github.com/x". */
+export function UrlLink({ url }: { url: string }) {
+  return <ResumeLink href={toHref(url)}>{displayUrl(url)}</ResumeLink>;
+}
+
+/**
+ * İletişim satırı: e-posta, telefon, LinkedIn ve web sitesi tıklanabilir.
+ * Her öğe bölünmez (whitespace-nowrap): uzun satır yalnızca ayraçlardan alt satıra geçer;
+ * aksi hâlde "github.com/ad-soyad" kısa çizgiden bölünüyor, ATS adresi iki parça okuyordu.
+ */
+export function ContactLine({ items, separator, className }: { items: ContactItem[]; separator: string; className?: string }) {
+  return (
+    <p className={className}>
+      {items.map((item, i) => (
+        <Fragment key={`${item.text}-${i}`}>
+          {i > 0 && separator}
+          <span className="whitespace-nowrap">
+            {item.href ? <ResumeLink href={item.href}>{item.text}</ResumeLink> : item.text}
+          </span>
+        </Fragment>
+      ))}
+    </p>
+  );
+}
 
 interface ResumeHeaderProps {
   layout: ResolvedHeaderLayout;

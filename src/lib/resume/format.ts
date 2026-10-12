@@ -43,16 +43,34 @@ export function displayUrl(url: string): string {
   return url.trim().replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, "");
 }
 
-export function getContactItems(personal: PersonalInfo): string[] {
-  return [
-    personal.email,
-    personal.phone,
-    personal.location,
-    displayUrl(personal.linkedin),
-    displayUrl(personal.website),
-  ]
-    .map((value) => value.trim())
-    .filter(Boolean);
+/**
+ * Kullanıcının yazdığı adresi tıklanabilir bağlantıya çevirir ("github.com/x" → "https://github.com/x").
+ * http(s) dışındaki şemalar (ör. "javascript:") da "https://" önekiyle etkisiz kalır.
+ */
+export function toHref(url: string): string {
+  const trimmed = url.trim();
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+export interface ContactItem {
+  text: string;
+  /** Varsa CV'de tıklanabilir bağlantı olur (PDF'te de çalışır). */
+  href?: string;
+}
+
+export function getContactItems(personal: PersonalInfo): ContactItem[] {
+  const items: ContactItem[] = [];
+  const email = personal.email.trim();
+  const phone = personal.phone.trim();
+  const location = personal.location.trim();
+
+  if (email) items.push({ text: email, href: `mailto:${email}` });
+  if (phone) items.push({ text: phone, href: `tel:${phone.replace(/[^\d+]/g, "")}` });
+  if (location) items.push({ text: location });
+  for (const url of [personal.linkedin, personal.website]) {
+    if (url.trim()) items.push({ text: displayUrl(url), href: toHref(url) });
+  }
+  return items;
 }
 
 /** Türkiye'ye özel opsiyonel alanlar: "Doğum Tarihi: … | Askerlik: … | Ehliyet: B" */
