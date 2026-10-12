@@ -92,9 +92,15 @@
 /*  PDF çıktısı: yalnızca #print-root yazdırılır                               */
 /* -------------------------------------------------------------------------- */
 
+/*
+ * Kenar boşluğu 0: tarayıcılar tarih/saat, sayfa adı, adres ve sayfa numarasını
+ * (üstbilgi/altbilgi) kenar boşluğuna basar; boşluk olmayınca hiç basmaz.
+ * Kenar boşlukları CV'nin içinden verilir: 1. sayfa için .resume-page dolgusu,
+ * sonraki sayfalar için yeni sayfayı başlatan öğenin üst dolgusu (aşağıda).
+ */
 @page {
   size: A4;
-  margin: 16mm 18mm;
+  margin: 0;
 }
 
 @media print {
@@ -107,20 +113,22 @@
     display: none !important;
   }
 
+  /* 1. sayfanın üst ve tüm sayfaların yan kenar boşlukları (önizlemedeki 16mm × 18mm ile aynı). */
   .resume-page {
     width: auto;
     min-height: 0;
-    padding: 0;
+    padding: 16mm 18mm 0;
   }
 
   /*
    * Sayfa sonları yazdırmadan hemen önce önizlemeyle aynı algoritmayla hesaplanır
    * (lib/export/print.ts → lib/resume/pagination.ts) ve buradaki öznitelikle uygulanır.
-   * Zorunlu sayfa sonundan sonra kenar boşluğu korunduğu için margin sıfırlanır.
+   * @page kenar boşluğu 0 olduğundan yeni sayfanın üst boşluğu bu öğenin dolgusudur.
    */
   .resume-page [data-page-break] {
     break-before: page;
     margin-top: 0 !important;
+    padding-top: 16mm;
   }
 
   /* Bir kaydın (iş, okul…) maddeleri iki sayfaya ayrılmaz. */

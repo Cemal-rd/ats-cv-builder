@@ -63,7 +63,7 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
       toast.warning("Bazı alanlarda hata var", { description: "PDF yine de oluşturuluyor; işaretli alanları kontrol edin." });
     }
     toast.info("PDF olarak kaydedin", {
-      description: "Yazdırma penceresinde hedef olarak \"PDF olarak kaydet\"i seçin ve \"Üstbilgi ve altbilgi\"yi kapatın.",
+      description: "Yazdırma penceresinde hedef olarak \"PDF olarak kaydet\"i seçin.",
     });
     // Toast'ın çizilmesine izin ver; window.print() ana iş parçacığını bloklar.
     setTimeout(() => printResume(buildFileName(form.getValues("personal.fullName"))), 150);
