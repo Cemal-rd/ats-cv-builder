@@ -136,7 +136,8 @@ export function ModernTemplate({ resume, locale, header, fontFamily = DEFAULT_FO
   };
 
   return (
-    <article className="resume-page" style={{ fontFamily, fontSize: "10pt", lineHeight: 1.45 }}>
+    // CV dili: büyük harfe çevirme dile göre yapılır (en: "education" → "EDUCATION", tr: "eğitim" → "EĞİTİM").
+    <article lang={locale} className="resume-page" style={{ fontFamily, fontSize: "10pt", lineHeight: 1.45 }}>
       <ResumeHeader layout={header} photo={photo} photoSize="27mm" photoClassName="rounded-md">
         <h1 className="text-[22pt] font-bold leading-tight tracking-tight text-neutral-900">
           {personal.fullName || t.namePlaceholder}

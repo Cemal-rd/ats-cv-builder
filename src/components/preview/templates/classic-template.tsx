@@ -140,6 +140,8 @@ export function ClassicTemplate({ resume, locale, header, fontFamily = DEFAULT_F
 
   return (
     <article
+      // CV dili: büyük harfe çevirme dile göre yapılır (en: "education" → "EDUCATION", tr: "eğitim" → "EĞİTİM").
+      lang={locale}
       className="resume-page"
       style={{ fontFamily, fontSize: "10.5pt", lineHeight: 1.4 }}
     >
