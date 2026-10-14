@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { WebAnalytics } from "@/components/analytics/web-analytics";
 import { cvFontVariables } from "@/lib/fonts/cv-fonts";
 import "./globals.css";
 
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
           <Toaster position="bottom-right" richColors closeButton />
+          <WebAnalytics />
         </ThemeProvider>
       </body>
     </html>

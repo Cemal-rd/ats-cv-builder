@@ -35,6 +35,8 @@ jobs:
         run: npm run build
         env:
           NEXT_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          # Cloudflare Web Analytics token'ı repoda değil, GitHub Secrets'ta tutulur.
+          CF_WEB_ANALYTICS_TOKEN: ${{ secrets.CF_WEB_ANALYTICS_TOKEN }}
 
       - uses: actions/upload-pages-artifact@v3
         with:
