@@ -285,3 +285,21 @@ const SAMPLE_EMAILS = new Set([
 /** Kullanıcı örnek CV'yi henüz kendi bilgileriyle değiştirmediyse true. */
 export const isSampleResume = (resume: Resume): boolean =>
   SAMPLE_EMAILS.has(resume.personal.email.trim().toLowerCase());
+
+/**
+ * Eski Türkçe örnek CV'nin (Ayşe Yılmaz) kimlik alanlarını yeni örneğe (Ali Veli) çevirir.
+ * Yalnızca ad ve e-posta hâlâ eski örnekteyse uygulanır; kullanıcının diğer düzenlemeleri korunur.
+ */
+export function renameLegacySample(resume: Resume): Resume {
+  const { personal } = resume;
+  if (personal.fullName !== "Ayşe Yılmaz" || personal.email !== "ayse.yilmaz@example.com") return resume;
+  return {
+    ...resume,
+    personal: {
+      ...personal,
+      fullName: "Ali Veli",
+      email: "ali.veli@example.com",
+      linkedin: personal.linkedin === "linkedin.com/in/ayseyilmaz" ? "linkedin.com/in/aliveli" : personal.linkedin,
+    },
+  };
+}

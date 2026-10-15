@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { detectUiLocaleFromPath } from "@/i18n";
-import { createSampleResumeFor } from "@/lib/schema/factories";
+import { createSampleResumeFor, renameLegacySample } from "@/lib/schema/factories";
 import {
   CV_FONT_IDS,
   DEFAULT_HEADER_LAYOUT,
@@ -82,11 +82,12 @@ export const useResumeStore = create<ResumeState>()(
       merge: (persisted, current) => {
         const saved = (persisted ?? {}) as Partial<PersistedState>;
         const locale = RESUME_LOCALES.includes(saved.locale as ResumeLocale) ? (saved.locale as ResumeLocale) : current.locale;
-        const resume = parseResumeData(saved.resume) ?? current.resume;
+        const parsed = parseResumeData(saved.resume);
+        const resume = parsed ? renameLegacySample(parsed) : current.resume;
         const versions: ResumeVersions = {};
         for (const key of RESUME_LOCALES) {
           const version = parseResumeData(saved.versions?.[key]);
-          if (version) versions[key] = version;
+          if (version) versions[key] = renameLegacySample(version);
         }
         versions[locale] = resume;
         const font = CV_FONT_IDS.includes(saved.font as CvFontId) ? (saved.font as CvFontId) : current.font;
