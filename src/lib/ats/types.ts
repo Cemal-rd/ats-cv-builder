@@ -1,4 +1,9 @@
+import type { Messages } from "@/i18n";
 import type { Resume, ResumeLocale } from "@/lib/schema/resume";
+
+/** Kuralların ürettiği metinler arayüz diline göre buradan gelir. */
+export type AtsRuleMessages = Messages["ats"]["rules"];
+export type AtsRuleId = keyof Messages["ats"]["labels"];
 
 export type CheckStatus = "pass" | "warn" | "fail";
 
@@ -19,6 +24,7 @@ export interface AtsContext {
   /** Aktif CV dili; uluslararası uyum kontrolleri için. */
   locale: ResumeLocale;
   bullets: AnalyzedBullet[];
+  t: AtsRuleMessages;
 }
 
 export interface RuleResult {
@@ -29,8 +35,7 @@ export interface RuleResult {
 }
 
 export interface AtsRule {
-  id: string;
-  label: string;
+  id: AtsRuleId;
   /** 0 ise kural yalnızca bilgilendirme amaçlıdır, skoru etkilemez. */
   maxScore: number;
   evaluate: (context: AtsContext) => RuleResult;

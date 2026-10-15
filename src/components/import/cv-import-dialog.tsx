@@ -14,8 +14,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useReplaceResume } from "@/hooks/use-replace-resume";
+import type { Messages } from "@/i18n";
+import { useI18n } from "@/i18n/provider";
 import { extractTextFromFile, IMPORT_ACCEPT, ImportError } from "@/lib/import/extract-text";
-import { parseResumeText, type ResumeImportResult } from "@/lib/import/parse-resume-text";
+import { parseResumeText, type ImportedSectionSummary, type ResumeImportResult } from "@/lib/import/parse-resume-text";
+import type { ImportWarning } from "@/lib/import/types";
 import type { Resume } from "@/lib/schema/resume";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +36,7 @@ export function CvImportDialog({ open, onOpenChange }: CvImportDialogProps) {
   const [phase, setPhase] = useState<Phase>({ name: "select" });
   const { getValues } = useFormContext<Resume>();
   const replaceResume = useReplaceResume();
+  const { t } = useI18n();
 
   const handleOpenChange = (next: boolean) => {
     onOpenChange(next);
@@ -49,7 +53,7 @@ export function CvImportDialog({ open, onOpenChange }: CvImportDialogProps) {
     } catch (error) {
       setPhase({
         name: "select",
-        error: error instanceof ImportError ? error.message : "Dosya işlenirken beklenmeyen bir hata oluştu.",
+        error: error instanceof ImportError ? t.import.errors[error.code] : t.import.unexpected,
       });
     }
   };
@@ -58,9 +62,9 @@ export function CvImportDialog({ open, onOpenChange }: CvImportDialogProps) {
     const previous = structuredClone(getValues());
     replaceResume(result.resume);
     handleOpenChange(false);
-    toast.success("CV bilgileri forma aktarıldı", {
-      description: "Otomatik ayrıştırma hatasız olmayabilir; lütfen alanları kontrol edin.",
-      action: { label: "Geri al", onClick: () => replaceResume(previous) },
+    toast.success(t.import.imported, {
+      description: t.import.importedDesc,
+      action: { label: t.common.undo, onClick: () => replaceResume(previous) },
       duration: 8000,
     });
   };
@@ -69,19 +73,15 @@ export function CvImportDialog({ open, onOpenChange }: CvImportDialogProps) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className={cn(phase.name === "review" && "max-w-2xl")}>
         <DialogHeader>
-          <DialogTitle>Mevcut CV&apos;nden doldur</DialogTitle>
-          <DialogDescription>
-            PDF veya Word dosyanı yükle; bilgiler otomatik olarak forma aktarılsın.
-          </DialogDescription>
+          <DialogTitle>{t.import.title}</DialogTitle>
+          <DialogDescription>{t.import.description}</DialogDescription>
         </DialogHeader>
 
         {phase.name === "select" && <FileDropZone error={phase.error} onFile={processFile} />}
         {phase.name === "loading" && (
           <div className="flex flex-col items-center gap-3 py-10 text-sm text-muted-foreground">
             <Loader2 className="h-6 w-6 animate-spin" />
-            <span>
-              <strong className="font-medium text-foreground">{phase.fileName}</strong> okunuyor…
-            </span>
+            <span>{t.import.reading(phase.fileName)}</span>
           </div>
         )}
         {phase.name === "review" && (
@@ -89,9 +89,9 @@ export function CvImportDialog({ open, onOpenChange }: CvImportDialogProps) {
             <ImportReview fileName={phase.fileName} result={phase.result} text={phase.text} />
             <DialogFooter className="border-t pt-4">
               <Button variant="ghost" onClick={() => setPhase({ name: "select" })}>
-                Başka dosya seç
+                {t.import.chooseAnother}
               </Button>
-              <Button onClick={() => applyImport(phase.result)}>Forma aktar</Button>
+              <Button onClick={() => applyImport(phase.result)}>{t.import.apply}</Button>
             </DialogFooter>
           </>
         )}
@@ -105,6 +105,7 @@ export function CvImportDialog({ open, onOpenChange }: CvImportDialogProps) {
 function FileDropZone({ error, onFile }: { error?: string; onFile: (file: File) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+  const { t } = useI18n();
 
   const handleDrop = (event: DragEvent) => {
     event.preventDefault();
@@ -132,8 +133,8 @@ function FileDropZone({ error, onFile }: { error?: string; onFile: (file: File) 
         )}
       >
         <Upload className="h-7 w-7 text-muted-foreground" />
-        <p className="text-sm font-medium">Dosyayı buraya sürükle veya seçmek için tıkla</p>
-        <p className="text-xs text-muted-foreground">PDF, DOCX veya TXT · en fazla 10 MB</p>
+        <p className="text-sm font-medium">{t.import.dropHere}</p>
+        <p className="text-xs text-muted-foreground">{t.import.formats}</p>
         <input
           ref={inputRef}
           type="file"
@@ -154,7 +155,7 @@ function FileDropZone({ error, onFile }: { error?: string; onFile: (file: File) 
       )}
       <p className="flex items-start gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        Dosyan cihazından çıkmaz; tüm işlem tarayıcında yapılır.
+        {t.import.privacy}
       </p>
     </div>
   );
@@ -164,16 +165,20 @@ function FileDropZone({ error, onFile }: { error?: string; onFile: (file: File) 
 
 function ImportReview({ fileName, result, text }: { fileName: string; result: ResumeImportResult; text: string }) {
   const { personal, summary } = result.resume;
+  const { t } = useI18n();
+  const labels = t.import.fields;
   const fields = [
-    { label: "Ad soyad", value: personal.fullName },
-    { label: "Unvan", value: personal.title },
-    { label: "E-posta", value: personal.email },
-    { label: "Telefon", value: personal.phone },
-    { label: "Konum", value: personal.location },
-    { label: "LinkedIn", value: personal.linkedin },
-    { label: "Web sitesi", value: personal.website },
-    { label: "Özet", value: summary ? `${summary.split(/\s+/).length} kelime` : "" },
+    { label: labels.fullName, value: personal.fullName },
+    { label: labels.title, value: personal.title },
+    { label: labels.email, value: personal.email },
+    { label: labels.phone, value: personal.phone },
+    { label: labels.location, value: personal.location },
+    { label: labels.linkedin, value: personal.linkedin },
+    { label: labels.website, value: personal.website },
+    { label: labels.summary, value: summary ? t.import.words(summary.split(/\s+/).length) : "" },
   ];
+  const sectionTitle = (section: ImportedSectionSummary) =>
+    section.kind === "custom" || section.kind === "summary" ? section.title : t.import.sectionTitles[section.kind];
   const foundSections = result.sections.filter((s) => s.count > 0);
   const missingSections = result.sections.filter((s) => s.count === 0 && s.kind !== "custom");
 
@@ -184,37 +189,37 @@ function ImportReview({ fileName, result, text }: { fileName: string; result: Re
         <span className="truncate font-medium">{fileName}</span>
       </p>
 
-      {result.warnings.map((warning) => (
-        <p key={warning} className="flex items-start gap-2 rounded-md bg-warning/10 px-3 py-2 text-xs text-warning">
+      {result.warnings.map((warning, index) => (
+        <p key={index} className="flex items-start gap-2 rounded-md bg-warning/10 px-3 py-2 text-xs text-warning">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          {warning}
+          {warningText(warning, t)}
         </p>
       ))}
 
       <section>
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Kişisel bilgiler</h3>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t.import.personalHeading}</h3>
         <dl className="grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
           {fields.map(({ label, value }) => (
             <div key={label} className="flex min-w-0 items-start gap-2 text-sm">
               <FoundIcon found={Boolean(value)} />
               <dt className="shrink-0 text-muted-foreground">{label}:</dt>
-              <dd className={cn("truncate", !value && "text-muted-foreground")}>{value || "bulunamadı"}</dd>
+              <dd className={cn("truncate", !value && "text-muted-foreground")}>{value || t.import.notFound}</dd>
             </div>
           ))}
         </dl>
       </section>
 
       <section>
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bölümler</h3>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t.import.sectionsHeading}</h3>
         <ul className="space-y-2">
           {foundSections.map((section) => (
             <li key={`${section.kind}-${section.title}`} className="flex items-start gap-2 text-sm">
               <FoundIcon found />
               <div className="min-w-0">
                 <p>
-                  <span className="font-medium">{section.title}</span>{" "}
+                  <span className="font-medium">{sectionTitle(section)}</span>{" "}
                   <span className="text-muted-foreground">
-                    · {section.count} {section.kind === "skills" ? "yetenek" : "kayıt"}
+                    · {t.import.countUnit(section.kind, section.count)}
                   </span>
                 </p>
                 {section.preview.map((line) => (
@@ -228,7 +233,7 @@ function ImportReview({ fileName, result, text }: { fileName: string; result: Re
           {missingSections.length > 0 && (
             <li className="flex items-start gap-2 text-sm text-muted-foreground">
               <FoundIcon found={false} />
-              Bulunamadı: {missingSections.map((s) => s.title).join(", ")}
+              {t.import.missingSections(missingSections.map(sectionTitle))}
             </li>
           )}
         </ul>
@@ -236,25 +241,29 @@ function ImportReview({ fileName, result, text }: { fileName: string; result: Re
 
       <details className="rounded-md border">
         <summary className="cursor-pointer px-3 py-2 text-xs font-medium">
-          Çıkarılan metni göster <span className="font-normal text-muted-foreground">(ATS&apos;lerin gördüğüne yakın)</span>
+          {t.import.showText} <span className="font-normal text-muted-foreground">{t.import.showTextHint}</span>
         </summary>
         <pre className="max-h-60 overflow-auto whitespace-pre-wrap border-t bg-muted/50 px-3 py-2 font-mono text-[11px] leading-relaxed">
-          {text || "(metin yok)"}
+          {text || t.import.noText}
         </pre>
       </details>
 
-      <p className="text-xs text-muted-foreground">
-        &quot;Forma aktar&quot; mevcut CV&apos;nin yerine geçer; aktarımdan sonra &quot;Geri al&quot; ile eski hâline
-        dönebilirsin. Fotoğraf aktarılmaz.
-      </p>
+      <p className="text-xs text-muted-foreground">{t.import.replaceNote}</p>
     </div>
   );
 }
 
 function FoundIcon({ found }: { found: boolean }) {
+  const { t } = useI18n();
   return found ? (
-    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" aria-label="bulundu" />
+    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" aria-label={t.import.found} />
   ) : (
-    <Minus className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label="bulunamadı" />
+    <Minus className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label={t.import.notFound} />
   );
+}
+
+function warningText(warning: ImportWarning, t: Messages): string {
+  return warning.code === "clipped"
+    ? t.import.warnings.clipped(warning.count, warning.examples)
+    : t.import.warnings[warning.code];
 }

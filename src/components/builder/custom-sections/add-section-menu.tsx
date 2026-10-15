@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, SquarePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useI18n } from "@/i18n/provider";
 import { useResumeStore } from "@/store/resume-store";
 import { CUSTOM_SECTION_PRESETS, type CustomSectionPreset } from "./presets";
 import { SECTION_ICONS } from "./section-icons";
@@ -15,6 +16,7 @@ interface AddSectionMenuProps {
 export function AddSectionMenu({ onAdd }: AddSectionMenuProps) {
   const [open, setOpen] = useState(false);
   const locale = useResumeStore((s) => s.locale);
+  const { t } = useI18n();
 
   const select = (preset: CustomSectionPreset | null) => {
     setOpen(false);
@@ -26,11 +28,11 @@ export function AddSectionMenu({ onAdd }: AddSectionMenuProps) {
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="mt-4 w-full border-dashed">
           <Plus />
-          Özel bölüm ekle
+          {t.addSection.button}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="center" className="w-[min(22rem,calc(100vw-2rem))] p-2">
-        <p className="px-2 pb-2 pt-1 text-xs font-medium text-muted-foreground">Hazır bölümler</p>
+        <p className="px-2 pb-2 pt-1 text-xs font-medium text-muted-foreground">{t.addSection.presetsTitle}</p>
         <div className="grid gap-1 sm:grid-cols-2">
           {CUSTOM_SECTION_PRESETS.map((preset) => {
             const Icon = SECTION_ICONS[preset.icon].icon;
@@ -44,7 +46,7 @@ export function AddSectionMenu({ onAdd }: AddSectionMenuProps) {
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <span>
                   <span className="block text-sm font-medium leading-tight">{preset.title[locale]}</span>
-                  <span className="block text-xs text-muted-foreground">{preset.description}</span>
+                  <span className="block text-xs text-muted-foreground">{t.addSection.presetDescriptions[preset.id]}</span>
                 </span>
               </button>
             );
@@ -57,7 +59,7 @@ export function AddSectionMenu({ onAdd }: AddSectionMenuProps) {
             className="flex w-full items-center gap-2.5 rounded-md p-2 text-left text-sm transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
           >
             <SquarePlus className="h-4 w-4 text-muted-foreground" />
-            Boş bölüm (kendi başlığınla)
+            {t.addSection.blank}
           </button>
         </div>
       </PopoverContent>

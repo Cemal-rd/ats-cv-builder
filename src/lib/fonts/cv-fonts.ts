@@ -88,7 +88,7 @@ export interface CvFontDefinition {
 }
 
 export const CV_FONTS: Record<CvFontId, CvFontDefinition> = {
-  template: { label: "Şablon varsayılanı", category: "default", stack: null },
+  template: { label: "Template default", category: "default", stack: null },
   arial: { label: "Arial", category: "sans", stack: 'Arial, Helvetica, "Liberation Sans", sans-serif' },
   calibri: { label: "Calibri (Carlito)", category: "sans", stack: "Calibri, var(--font-cv-carlito), Arial, sans-serif" },
   inter: { label: "Inter", category: "sans", stack: "var(--font-sans), Arial, sans-serif" },

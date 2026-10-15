@@ -17,7 +17,6 @@ export interface TemplateProps {
 export interface TemplateDefinition {
   id: TemplateId;
   name: string;
-  description: string;
   /** Kullanıcı "Şablona göre" seçtiğinde kullanılan başlık düzeni. */
   defaultHeader: (hasPhoto: boolean) => ResolvedHeaderLayout;
   component: React.ComponentType<TemplateProps>;

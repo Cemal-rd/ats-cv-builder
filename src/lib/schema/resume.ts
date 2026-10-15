@@ -70,13 +70,17 @@ export const LIMITS = {
 } as const;
 
 const id = z.string().min(1);
-const shortText = (max: number = LIMITS.text) => z.string().trim().max(max, `En fazla ${max} karakter`);
-const longText = (max: number) => z.string().max(max, `En fazla ${max} karakter`);
+/**
+ * Doğrulama mesajları kod olarak tutulur ("max:150", "email"…); form alanı bunları
+ * arayüz dilinde gösterir (bkz. components/builder/form/text-field.tsx).
+ */
+const shortText = (max: number = LIMITS.text) => z.string().trim().max(max, `max:${max}`);
+const longText = (max: number) => z.string().max(max, `max:${max}`);
 const dateText = shortText(LIMITS.date);
 const optionalLink = z
   .string()
   .trim()
-  .regex(LINK_PATTERN, "Geçerli bir bağlantı girin (ör. linkedin.com/in/adiniz)")
+  .regex(LINK_PATTERN, "link")
   .or(z.literal(""));
 
 /* -------------------------------------------------------------------------- */
@@ -86,8 +90,8 @@ const optionalLink = z
 export const personalInfoSchema = z.object({
   fullName: shortText(LIMITS.fullName),
   title: shortText(LIMITS.text),
-  email: z.string().trim().email("Geçerli bir e-posta adresi girin").or(z.literal("")),
-  phone: z.string().trim().regex(PHONE_PATTERN, "Geçerli bir telefon numarası girin").or(z.literal("")),
+  email: z.string().trim().email("email").or(z.literal("")),
+  phone: z.string().trim().regex(PHONE_PATTERN, "phone").or(z.literal("")),
   location: shortText(LIMITS.text),
   linkedin: optionalLink,
   website: optionalLink,

@@ -22,7 +22,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { DragHandle, SortableItem, SortableList } from "@/components/ui/sortable";
 import { useReplaceResume } from "@/hooks/use-replace-resume";
-import { editorSectionLabels } from "@/lib/resume/labels";
+import { useI18n } from "@/i18n/provider";
 import {
   customSectionIdFromKey,
   customSectionKey,
@@ -59,6 +59,7 @@ const BUILTIN_EDITORS: Record<BuiltinSectionKey, { icon: LucideIcon; Component: 
 export function EditorPanel() {
   const { control, getValues, setValue } = useFormContext<Resume>();
   const replace = useReplaceResume();
+  const { t } = useI18n();
   const [openSections, setOpenSections] = useState<string[]>(["personal", "experience"]);
 
   const customSections = useFieldArray({ control, name: "customSections", keyName: "fieldKey" });
@@ -100,7 +101,7 @@ export function EditorPanel() {
     const previous = structuredClone(getValues());
     customSections.remove(index);
     setOrder(order.filter((k) => k !== key));
-    toast("Bölüm silindi", { action: { label: "Geri al", onClick: () => replace(previous) } });
+    toast(t.editor.sectionDeleted, { action: { label: t.common.undo, onClick: () => replace(previous) } });
   };
 
   /** Mevcut veriyi geri alınabilir şekilde değiştirir. */
@@ -109,22 +110,22 @@ export function EditorPanel() {
   const replaceResume = (next: Resume, message: string) => {
     const previous = structuredClone(getValues());
     replace(next);
-    toast(message, { action: { label: "Geri al", onClick: () => replace(previous) } });
+    toast(message, { action: { label: t.common.undo, onClick: () => replace(previous) } });
   };
 
   return (
     <div className="px-4 pb-8">
       <Accordion type="multiple" value={openSections} onValueChange={setOpenSections}>
-        <EditorSection value="personal" icon={User} title="Kişisel Bilgiler" description="Ad, iletişim, fotoğraf">
+        <EditorSection value="personal" icon={User} {...t.editor.personal}>
           <PersonalSection />
         </EditorSection>
-        <EditorSection value="summary" icon={FileText} title="Özet / Hakkımda" description="Kısa profesyonel özet">
+        <EditorSection value="summary" icon={FileText} {...t.editor.summary}>
           <SummarySection />
         </EditorSection>
 
         <p className="flex items-center gap-1.5 pb-1 pt-4 text-xs text-muted-foreground">
           <LayoutList className="h-3.5 w-3.5" />
-          Aşağıdaki bölümlerin CV&apos;deki sırasını tutamaçtan sürükleyerek değiştirebilirsiniz.
+          {t.editor.reorderHint}
         </p>
 
         <SortableList ids={order} onMove={(from, to) => setOrder(arrayMove(order, from, to))}>
@@ -133,7 +134,7 @@ export function EditorPanel() {
               const { icon, Component } = BUILTIN_EDITORS[key];
               return (
                 <SortableItem key={key} id={key} className="bg-background">
-                  <EditorSection value={key} icon={icon} sortable {...editorSectionLabels[key]}>
+                  <EditorSection value={key} icon={icon} sortable {...t.editor.sections[key]}>
                     <Component />
                   </EditorSection>
                 </SortableItem>
@@ -152,7 +153,7 @@ export function EditorPanel() {
                       icon={LayoutList}
                       sortable
                       title={title}
-                      description="Özel bölüm"
+                      description={t.editor.customSection}
                       leading={
                         <IconPicker
                           value={icon}
@@ -174,17 +175,17 @@ export function EditorPanel() {
 
       <AddSectionMenu onAdd={addCustomSection} />
       <p className="mt-1.5 text-center text-xs text-muted-foreground">
-        Gönüllülük, Yayınlar, Ödüller, Referanslar, Hobiler…
+        {t.editor.presetExamples}
       </p>
 
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         <Button variant="ghost" size="sm" onClick={() => setImportOpen(true)}>
           <FileUp />
-          CV yükle (PDF / Word)
+          {t.editor.importCv}
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => replaceResume(createEmptyResume(), "Form temizlendi")}>
+        <Button variant="ghost" size="sm" onClick={() => replaceResume(createEmptyResume(), t.editor.formCleared)}>
           <RotateCcw />
-          Formu temizle
+          {t.editor.clearForm}
         </Button>
       </div>
       <CvImportDialog open={importOpen} onOpenChange={setImportOpen} />
@@ -206,10 +207,11 @@ interface EditorSectionProps {
 }
 
 function EditorSection({ value, icon: Icon, title, description, sortable, leading, children }: EditorSectionProps) {
+  const { t } = useI18n();
   return (
     <AccordionItem value={value} id={sectionDomId(value)} className="scroll-mt-2">
       <div className="flex items-center gap-1">
-        {sortable && <DragHandle label={`${title} bölümünü sürükle`} className="-ml-1.5" />}
+        {sortable && <DragHandle label={t.editor.dragSection(title)} className="-ml-1.5" />}
         {leading && <div className="mr-2">{leading}</div>}
         <AccordionTrigger className="flex-1 hover:no-underline">
           <span className="flex items-center gap-3 text-left">
@@ -238,7 +240,8 @@ function CustomSectionHeader({
   index: number;
   children: (header: { title: string; icon: string }) => React.ReactNode;
 }) {
+  const { t } = useI18n();
   const { control } = useFormContext<Resume>();
   const [title, icon] = useWatch({ control, name: [`customSections.${index}.title`, `customSections.${index}.icon`] });
-  return <>{children({ title: title?.trim() || "Adsız bölüm", icon: icon ?? "list" })}</>;
+  return <>{children({ title: title?.trim() || t.editor.untitledSection, icon: icon ?? "list" })}</>;
 }

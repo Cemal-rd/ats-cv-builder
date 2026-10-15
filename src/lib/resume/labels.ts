@@ -69,12 +69,3 @@ export const resumeLabels: Record<ResumeLocale, ResumeLabels> = {
   },
 };
 
-/** Editör arayüzündeki bölüm adları (CV dilinden bağımsız, Türkçe). */
-export const editorSectionLabels = {
-  experience: { title: "İş Deneyimi", description: "Pozisyonlar ve başarılar" },
-  education: { title: "Eğitim", description: "Okul, bölüm, derece" },
-  skills: { title: "Yetenekler", description: "Kategorilere göre yetkinlikler" },
-  languages: { title: "Yabancı Diller", description: "Dil ve seviye (CEFR)" },
-  projects: { title: "Projeler", description: "Kişisel ve açık kaynak işler" },
-  certifications: { title: "Sertifikalar", description: "Lisans ve sertifikalar" },
-} as const;

@@ -9,6 +9,7 @@ import {
   type FieldPath,
 } from "react-hook-form";
 import { toast } from "sonner";
+import { useI18n } from "@/i18n/provider";
 import type { Resume } from "@/lib/schema/resume";
 
 /**
@@ -17,6 +18,7 @@ import type { Resume } from "@/lib/schema/resume";
  */
 export function useResumeList<K extends FieldArrayPath<Resume>>(name: K, createItem: () => FieldArray<Resume, K>) {
   const { control, getValues } = useFormContext<Resume>();
+  const { t } = useI18n();
   const { fields, append, insert, remove, move } = useFieldArray<Resume, K, "fieldKey">({
     control,
     name,
@@ -29,11 +31,11 @@ export function useResumeList<K extends FieldArrayPath<Resume>>(name: K, createI
     (index: number) => {
       const removed = getValues(`${name}.${index}` as FieldPath<Resume>) as unknown as FieldArray<Resume, K>;
       remove(index);
-      toast("Öğe silindi", {
-        action: { label: "Geri al", onClick: () => insert(index, removed) },
+      toast(t.list.itemDeleted, {
+        action: { label: t.common.undo, onClick: () => insert(index, removed) },
       });
     },
-    [getValues, insert, name, remove],
+    [getValues, insert, name, remove, t],
   );
 
   const moveItem = useCallback(

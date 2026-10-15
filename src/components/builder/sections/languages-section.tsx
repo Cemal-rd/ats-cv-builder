@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/i18n/provider";
 import { createLanguage } from "@/lib/schema/factories";
 import { LANGUAGE_LEVELS } from "@/lib/schema/resume";
 import { resumeLabels } from "@/lib/resume/labels";
@@ -9,21 +10,17 @@ import { ListSection } from "../form/list-section";
 import { SelectField } from "../form/select-field";
 import { TextField } from "../form/text-field";
 
-const LEVEL_OPTIONS = LANGUAGE_LEVELS.map((level) => ({ value: level, label: resumeLabels.tr.languageLevels[level] }));
-const LANGUAGE_SUGGESTIONS = ["Türkçe", "İngilizce", "Almanca", "Fransızca", "İspanyolca", "Arapça", "Rusça", "İtalyanca", "Japonca", "Çince"];
-
 export function LanguagesSection() {
   const list = useResumeList("languages", createLanguage);
+  const { t } = useI18n();
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">
-        Seviyeler Avrupa Dil Portföyü (CEFR) ölçeğindedir; CV&apos;de seçili dile göre yazılır.
-      </p>
+      <p className="text-xs text-muted-foreground">{t.languages.note}</p>
       <ListSection
         list={list}
-        emptyText="Henüz dil eklenmedi."
-        addLabel="Dil ekle"
+        emptyText={t.languages.empty}
+        addLabel={t.languages.add}
         renderItem={(props) => <LanguageItem {...props} />}
       />
     </div>
@@ -31,11 +28,19 @@ export function LanguagesSection() {
 }
 
 function LanguageItem(props: ListItemProps) {
+  const { t, locale } = useI18n();
   const prefix = `languages.${props.index}` as const;
+  const levelOptions = LANGUAGE_LEVELS.map((level) => ({ value: level, label: resumeLabels[locale].languageLevels[level] }));
+
   return (
     <ListItemCard title="" compact {...props}>
-      <TextField name={`${prefix}.name`} label="Dil" placeholder="İngilizce" suggestions={LANGUAGE_SUGGESTIONS} />
-      <SelectField name={`${prefix}.level`} label="Seviye" options={LEVEL_OPTIONS} />
+      <TextField
+        name={`${prefix}.name`}
+        label={t.languages.language}
+        placeholder={t.languages.languagePlaceholder}
+        suggestions={t.languages.suggestions}
+      />
+      <SelectField name={`${prefix}.level`} label={t.languages.level} options={levelOptions} />
     </ListItemCard>
   );
 }

@@ -23,7 +23,10 @@ export interface ResumeBackup {
 
 export type ImportResult =
   | { ok: true; resume: Resume; versions?: ResumeVersions; settings?: Partial<ResumeSettings> }
-  | { ok: false; error: string };
+  | { ok: false; error: BackupErrorCode };
+
+/** Hata metinleri arayüz dilinde gösterilir (i18n → backup.errors). */
+export type BackupErrorCode = "invalidJson" | "unreadableResume" | "unrecognized";
 
 export function createBackup(resume: Resume, versions: ResumeVersions, settings: ResumeSettings): ResumeBackup {
   return {
@@ -52,12 +55,12 @@ export async function parseBackupFile(file: File): Promise<ImportResult> {
   try {
     json = JSON.parse(await file.text());
   } catch {
-    return { ok: false, error: "Dosya geçerli bir JSON değil." };
+    return { ok: false, error: "invalidJson" };
   }
 
   if (isRecord(json) && json.app === BACKUP_APP_ID) {
     const resume = parseResumeData(json.resume);
-    if (!resume) return { ok: false, error: "Yedekteki CV verisi okunamadı." };
+    if (!resume) return { ok: false, error: "unreadableResume" };
 
     const versions: ResumeVersions = {};
     if (isRecord(json.versions)) {
@@ -78,5 +81,5 @@ export async function parseBackupFile(file: File): Promise<ImportResult> {
   const raw = parseResumeData(json);
   if (raw) return { ok: true, resume: raw };
 
-  return { ok: false, error: "Dosya yapısı tanınmadı. Bu uygulamadan alınmış bir yedek seçin." };
+  return { ok: false, error: "unrecognized" };
 }

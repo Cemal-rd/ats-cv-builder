@@ -5,6 +5,7 @@ import { ImagePlus, Trash2, UserRound } from "lucide-react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n/provider";
 import { resizeImageToDataUrl } from "@/lib/image/resize-image";
 import type { Resume } from "@/lib/schema/resume";
 import { useResumeStore } from "@/store/resume-store";
@@ -16,26 +17,27 @@ export function PhotoField() {
   const [photo, showPhoto] = useWatch({ control, name: ["personal.photo", "personal.showPhoto"] });
   const locale = useResumeStore((s) => s.locale);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n();
 
   const handleFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      toast.error("Lütfen bir görsel dosyası seçin.");
+      toast.error(t.photo.notImage);
       return;
     }
     if (file.size > MAX_UPLOAD_BYTES) {
-      toast.error("Dosya 8 MB'tan büyük olamaz.");
+      toast.error(t.photo.tooLarge);
       return;
     }
     try {
       const dataUrl = await resizeImageToDataUrl(file);
       setValue("personal.photo", dataUrl, { shouldDirty: true });
       setValue("personal.showPhoto", true, { shouldDirty: true });
-      toast.success("Fotoğraf eklendi");
+      toast.success(t.photo.added);
     } catch {
-      toast.error("Fotoğraf işlenemedi", { description: "Farklı bir dosya deneyin (JPG veya PNG)." });
+      toast.error(t.photo.failed, { description: t.photo.failedDesc });
     }
   };
 
@@ -49,30 +51,27 @@ export function PhotoField() {
       <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-md bg-muted">
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element -- data URL, next/image gereksiz
-          <img src={photo} alt="Profil fotoğrafı önizlemesi" className="h-full w-full object-cover" />
+          <img src={photo} alt={t.photo.previewAlt} className="h-full w-full object-cover" />
         ) : (
           <UserRound className="h-7 w-7 text-muted-foreground" aria-hidden />
         )}
       </div>
       <div className="min-w-0 flex-1 space-y-2">
         <div>
-          <p className="text-sm font-medium">Profil fotoğrafı (opsiyonel)</p>
-          <p className="text-xs text-muted-foreground">
-            Türkiye&apos;de yaygındır; ABD/İngiltere başvurularında önerilmez. ATS&apos;ler fotoğrafı okumaz, metin
-            ayrıştırmayı da etkilemez.
-          </p>
+          <p className="text-sm font-medium">{t.photo.title}</p>
+          <p className="text-xs text-muted-foreground">{t.photo.description}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
           <Button variant="outline" size="sm" onClick={() => inputRef.current?.click()}>
             <ImagePlus />
-            {photo ? "Değiştir" : "Yükle"}
+            {photo ? t.photo.change : t.photo.upload}
           </Button>
           {photo && (
             <>
               <Button variant="ghost" size="sm" onClick={removePhoto}>
                 <Trash2 />
-                Kaldır
+                {t.photo.remove}
               </Button>
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -80,15 +79,13 @@ export function PhotoField() {
                   className="h-4 w-4 rounded accent-slate-900 dark:accent-slate-100"
                   {...register("personal.showPhoto")}
                 />
-                CV&apos;de göster
+                {t.photo.show}
               </label>
             </>
           )}
         </div>
         {photo && showPhoto && locale === "en" && (
-          <p className="text-xs text-warning">
-            İngilizce sürümde fotoğraf gösteriliyor; uluslararası başvurular için gizlemeniz önerilir.
-          </p>
+          <p className="text-xs text-warning">{t.photo.englishWarning}</p>
         )}
       </div>
     </div>

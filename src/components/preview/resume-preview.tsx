@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useState } from "react";
 import { useElementSize } from "@/hooks/use-element-size";
+import { useI18n } from "@/i18n/provider";
 import { PAGE_HEIGHT_PX, paginate } from "@/lib/resume/pagination";
 import { useResumeStore } from "@/store/resume-store";
 import { TemplateRenderer } from "./templates";
@@ -19,6 +20,7 @@ export function ResumePreview() {
   const locale = useResumeStore((s) => s.locale);
   const font = useResumeStore((s) => s.font);
   const header = useResumeStore((s) => s.header);
+  const { t } = useI18n();
 
   const container = useElementSize<HTMLDivElement>();
   const page = useElementSize<HTMLDivElement>();
@@ -53,7 +55,7 @@ export function ResumePreview() {
       <div className="mx-auto" style={{ width: A4_WIDTH_PX * scale, height: paperHeight * scale }}>
         <div
           ref={page.ref}
-          aria-label="CV önizlemesi"
+          aria-label={t.preview.previewAria}
           className="relative origin-top-left bg-white shadow-xl ring-1 ring-black/5"
           style={{ width: A4_WIDTH_PX, minHeight: pageCount * PAGE_HEIGHT_PX, transform: `scale(${scale})` }}
         >
@@ -64,19 +66,21 @@ export function ResumePreview() {
         </div>
       </div>
       <p className="mt-3 text-center text-xs text-muted-foreground">
-        {pageCount} sayfa{pageCount > 1 && " · Sayfa sonları PDF'teki ile aynı yerde gösterilir."}
+        {t.preview.pageCount(pageCount)}
+        {pageCount > 1 && ` · ${t.preview.pageBreakNote}`}
       </p>
     </div>
   );
 }
 
 function PageBreakMarker({ top, page }: { top: number; page: number }) {
+  const { t } = useI18n();
   return (
     <div aria-hidden className="pointer-events-none absolute inset-x-0" style={{ top: top - 6 }}>
       {/* Sayfalar arası boşluğu, kâğıt ayrımı gibi gösterir. */}
       <div className="h-3 bg-gradient-to-b from-neutral-200/0 via-neutral-300/70 to-neutral-200/0" />
       <span className="absolute right-2 top-3 rounded bg-sky-500 px-1.5 py-0.5 text-[10px] font-medium text-white">
-        Sayfa {page}
+        {t.preview.pageLabel(page)}
       </span>
     </div>
   );

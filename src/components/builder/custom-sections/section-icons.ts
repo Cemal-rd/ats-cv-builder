@@ -22,26 +22,27 @@ import {
 
 /** Özel bölümler için seçilebilir editör simgeleri (anahtar → bileşen). */
 export const SECTION_ICONS = {
-  list: { icon: LayoutList, label: "Liste" },
-  volunteer: { icon: HeartHandshake, label: "Gönüllülük" },
-  publication: { icon: BookOpen, label: "Yayın" },
-  news: { icon: Newspaper, label: "Basın" },
-  award: { icon: Trophy, label: "Ödül" },
-  medal: { icon: Medal, label: "Madalya" },
-  badge: { icon: BadgeCheck, label: "Onay" },
-  reference: { icon: Users, label: "Kişiler" },
-  talk: { icon: Mic, label: "Konuşma" },
-  idea: { icon: Lightbulb, label: "Fikir" },
-  code: { icon: Code, label: "Kod" },
-  globe: { icon: Globe, label: "Dünya" },
-  travel: { icon: Plane, label: "Seyahat" },
-  art: { icon: Palette, label: "Sanat" },
-  music: { icon: Music, label: "Müzik" },
-  photo: { icon: Camera, label: "Fotoğraf" },
-  sport: { icon: Dumbbell, label: "Spor" },
-  star: { icon: Star, label: "Yıldız" },
-} satisfies Record<string, { icon: LucideIcon; label: string }>;
+  list: { icon: LayoutList },
+  volunteer: { icon: HeartHandshake },
+  publication: { icon: BookOpen },
+  news: { icon: Newspaper },
+  award: { icon: Trophy },
+  medal: { icon: Medal },
+  badge: { icon: BadgeCheck },
+  reference: { icon: Users },
+  talk: { icon: Mic },
+  idea: { icon: Lightbulb },
+  code: { icon: Code },
+  globe: { icon: Globe },
+  travel: { icon: Plane },
+  art: { icon: Palette },
+  music: { icon: Music },
+  photo: { icon: Camera },
+  sport: { icon: Dumbbell },
+  star: { icon: Star },
+} satisfies Record<string, { icon: LucideIcon }>;
 
+/** Simge adları (ekran okuyucu/ipucu) arayüz dilinde: i18n → icons.labels. */
 export type SectionIconKey = keyof typeof SECTION_ICONS;
 
 export function getSectionIcon(key: string): LucideIcon {

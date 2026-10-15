@@ -4,18 +4,20 @@
  */
 
 import { BULLET_CHARS } from "./patterns";
+import { ImportError, type ImportWarning } from "./types";
+
+export { ImportError };
 
 export type ImportFileKind = "pdf" | "docx" | "txt";
 
 export interface ExtractedText {
   text: string;
-  warnings: string[];
+  warnings: ImportWarning[];
 }
 
 export const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
 export const IMPORT_ACCEPT = ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain";
 
-export class ImportError extends Error {}
 
 export function detectFileKind(file: File): ImportFileKind | null {
   const name = file.name.toLowerCase();
@@ -29,13 +31,9 @@ export async function extractTextFromFile(file: File): Promise<ExtractedText> {
   const kind = detectFileKind(file);
   if (!kind) {
     const isLegacyWord = file.name.toLowerCase().endsWith(".doc");
-    throw new ImportError(
-      isLegacyWord
-        ? "Eski Word formatı (.doc) desteklenmiyor. Word'de \"Farklı Kaydet → .docx\" ile kaydedip tekrar deneyin."
-        : "Desteklenmeyen dosya türü. PDF, DOCX veya TXT yükleyin.",
-    );
+    throw new ImportError(isLegacyWord ? "legacyDoc" : "unsupported");
   }
-  if (file.size > MAX_IMPORT_BYTES) throw new ImportError("Dosya 10 MB'tan büyük olamaz.");
+  if (file.size > MAX_IMPORT_BYTES) throw new ImportError("tooLarge");
 
   const buffer = await file.arrayBuffer();
   switch (kind) {
@@ -77,11 +75,7 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<ExtractedText> {
     doc = await pdfjs.getDocument({ data: new Uint8Array(buffer) }).promise;
   } catch (error) {
     const name = error instanceof Error ? error.name : "";
-    throw new ImportError(
-      name === "PasswordException"
-        ? "PDF şifreli. Şifresiz bir kopyasını yükleyin."
-        : "PDF okunamadı. Dosya bozuk olabilir.",
-    );
+    throw new ImportError(name === "PasswordException" ? "pdfPassword" : "pdfUnreadable");
   }
 
   try {
@@ -100,11 +94,9 @@ async function extractPdfText(buffer: ArrayBuffer): Promise<ExtractedText> {
       page.cleanup();
     }
 
-    const warnings: string[] = [];
+    const warnings: ImportWarning[] = [];
     if (rowCount >= 15 && gappedRowCount / rowCount > 0.35) {
-      warnings.push(
-        "İki sütunlu bir düzen algılandı. ATS sistemleri bu tür CV'lerde metni karışık sırayla okuyabilir; bazı alanlar yanlış yere düşmüş olabilir.",
-      );
+      warnings.push({ code: "twoColumn" });
     }
     return { text: pages.join("\n"), warnings };
   } finally {
@@ -202,7 +194,7 @@ async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
   try {
     html = (await mammoth.convertToHtml({ arrayBuffer: buffer })).value;
   } catch {
-    throw new ImportError("Word dosyası okunamadı. Dosya bozuk olabilir.");
+    throw new ImportError("docxUnreadable");
   }
   return htmlToText(html);
 }

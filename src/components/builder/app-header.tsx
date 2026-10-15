@@ -8,6 +8,8 @@ import { scoreTone } from "@/components/ats/score-gauge";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { useAtsReport } from "@/hooks/use-ats-report";
+import { UI_LOCALE_STORAGE_KEY, uiLocalePath } from "@/i18n";
+import { useI18n } from "@/i18n/provider";
 import { useReplaceResume } from "@/hooks/use-replace-resume";
 import { createBackup, downloadJson, parseBackupFile } from "@/lib/export/backup";
 import { printResume } from "@/lib/export/print";
@@ -26,6 +28,8 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { score } = useAtsReport();
   const tone = scoreTone(score);
+  const { t, locale: uiLocale } = useI18n();
+  const otherUiLocale = uiLocale === "tr" ? "en" : "tr";
 
   const handleExportJson = () => {
     const { resume, versions, template, font, header, locale } = useResumeStore.getState();
@@ -33,7 +37,7 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
       createBackup(resume, versions, { template, font, header, locale }),
       `${buildFileName(resume.personal.fullName)}.json`,
     );
-    toast.success("Yedek indirildi", { description: "JSON dosyasını daha sonra içe aktarabilirsiniz." });
+    toast.success(t.header.backupDownloaded, { description: t.header.backupDownloadedDesc });
   };
 
   const handleImport = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -43,7 +47,7 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
 
     const result = await parseBackupFile(file);
     if (!result.ok) {
-      toast.error("İçe aktarma başarısız", { description: result.error });
+      toast.error(t.header.importFailed, { description: t.backup.errors[result.error] });
       return;
     }
     const { setTemplate, setLocale, setVersions, locale: currentLocale } = useResumeStore.getState();
@@ -54,17 +58,15 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
     setLocale(locale);
     setVersions(result.versions ?? { [locale]: result.resume });
     replaceResume(result.versions?.[locale] ?? result.resume);
-    toast.success("CV içe aktarıldı");
+    toast.success(t.header.imported);
   };
 
   const handleDownloadPdf = async () => {
     const isValid = await form.trigger();
     if (!isValid) {
-      toast.warning("Bazı alanlarda hata var", { description: "PDF yine de oluşturuluyor; işaretli alanları kontrol edin." });
+      toast.warning(t.header.formHasErrors, { description: t.header.formHasErrorsDesc });
     }
-    toast.info("PDF olarak kaydedin", {
-      description: "Yazdırma penceresinde hedef olarak \"PDF olarak kaydet\"i seçin.",
-    });
+    toast.info(t.header.savePdf, { description: t.header.savePdfDesc });
     // Toast'ın çizilmesine izin ver; window.print() ana iş parçacığını bloklar.
     setTimeout(() => printResume(buildFileName(form.getValues("personal.fullName"))), 150);
   };
@@ -78,11 +80,11 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
         {/* Sitenin ne olduğu ilk bakışta anlaşılsın: ad + tek cümlelik açıklama. */}
         <div className="min-w-0 leading-tight">
           <h1 className="truncate text-sm font-semibold tracking-tight">
-            <span className="sm:hidden">CV Oluşturucu</span>
-            <span className="hidden sm:inline">ATS Uyumlu CV Oluşturucu</span>
+            <span className="sm:hidden">{t.header.appNameShort}</span>
+            <span className="hidden sm:inline">{t.header.appName}</span>
           </h1>
           <p className="hidden truncate text-[11px] text-muted-foreground lg:block">
-            İşe alım sistemlerine takılmayan CV&apos;ni hazırla · Ücretsiz, üyeliksiz
+            {t.header.tagline}
           </p>
         </div>
       </div>
@@ -91,7 +93,7 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
         type="button"
         onClick={onScoreClick}
         className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors hover:bg-accent"
-        aria-label={`ATS skoru ${score}. Analizi aç`}
+        aria-label={t.header.scoreAria(score)}
       >
         <span className={cn("h-2 w-2 rounded-full bg-current", tone.text)} />
         <span className="text-muted-foreground">ATS</span>
@@ -106,17 +108,33 @@ export function AppHeader({ onScoreClick }: AppHeaderProps) {
           className="hidden"
           onChange={handleImport}
         />
-        <Button variant="ghost" size="sm" className="px-2 sm:px-3" onClick={() => fileInputRef.current?.click()} aria-label="JSON içe aktar">
+        <Button variant="ghost" size="sm" className="px-2 sm:px-3" onClick={() => fileInputRef.current?.click()} aria-label={t.header.importAria}>
           <FileUp />
-          <span className="hidden md:inline">İçe aktar</span>
+          <span className="hidden md:inline">{t.header.import}</span>
         </Button>
-        <Button variant="ghost" size="sm" className="px-2 sm:px-3" onClick={handleExportJson} aria-label="JSON olarak yedekle">
+        <Button variant="ghost" size="sm" className="px-2 sm:px-3" onClick={handleExportJson} aria-label={t.header.backupAria}>
           <Save />
-          <span className="hidden md:inline">Yedekle</span>
+          <span className="hidden md:inline">{t.header.backup}</span>
         </Button>
         <Button size="sm" className="px-2 sm:px-3" onClick={handleDownloadPdf}>
           <FileDown />
-          <span className="hidden sm:inline">PDF indir</span>
+          <span className="hidden sm:inline">{t.header.downloadPdf}</span>
+        </Button>
+        <Button variant="ghost" size="sm" className="px-2 font-semibold" asChild>
+          <a
+            href={uiLocalePath(otherUiLocale)}
+            hrefLang={otherUiLocale}
+            aria-label={t.header.switchLanguageAria}
+            onClick={() => {
+              try {
+                localStorage.setItem(UI_LOCALE_STORAGE_KEY, otherUiLocale);
+              } catch {
+                // Gizli pencere vb. — tercih kaydedilemese de bağlantı çalışır.
+              }
+            }}
+          >
+            {t.header.switchLanguage}
+          </a>
         </Button>
         <ThemeToggle />
       </div>

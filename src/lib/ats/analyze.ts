@@ -1,5 +1,6 @@
 import { resumeToPlainText, toBullets } from "@/lib/resume/format";
 import { countWords } from "@/lib/utils";
+import { MESSAGES, type Messages } from "@/i18n";
 import type { Resume, ResumeLocale } from "@/lib/schema/resume";
 import { findWeakPhrase, hasActionVerb } from "./action-verbs";
 import { ATS_RULES } from "./rules";
@@ -19,27 +20,29 @@ function analyzeBullet(text: string, source: string, position: number): Analyzed
   };
 }
 
-function buildContext(resume: Resume, locale: ResumeLocale): AtsContext {
+function buildContext(resume: Resume, locale: ResumeLocale, t: Messages["ats"]): AtsContext {
   const bullets = [
     ...resume.experience.flatMap((e) =>
       toBullets(e.description).map((b, i) => analyzeBullet(b, e.position || e.company, i + 1)),
     ),
     ...resume.projects.flatMap((p) => toBullets(p.description).map((b, i) => analyzeBullet(b, p.name, i + 1))),
   ];
-  return { resume, locale, bullets };
+  return { resume, locale, bullets, t: t.rules };
 }
 
 export function analyzeResume(
   resume: Resume,
   locale: ResumeLocale = "tr",
+  /** Arayüz dilindeki ATS metinleri (kural adları, mesajlar, ipuçları). */
+  t: Messages["ats"] = MESSAGES.tr.ats,
   rules: readonly AtsRule[] = ATS_RULES,
 ): AtsReport {
-  const context = buildContext(resume, locale);
+  const context = buildContext(resume, locale, t);
   const checks = rules.map((rule) => {
     const result = rule.evaluate(context);
     return {
       id: rule.id,
-      label: rule.label,
+      label: t.labels[rule.id],
       maxScore: rule.maxScore,
       ...result,
       score: Math.max(0, Math.min(rule.maxScore, result.score)),

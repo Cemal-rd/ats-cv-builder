@@ -19,12 +19,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import { useI18n } from "@/i18n/provider";
 import { cn } from "@/lib/utils";
-
-const SCREEN_READER_INSTRUCTIONS = {
-  draggable:
-    "Sıralamak için boşluk veya Enter tuşuna basın, ok tuşlarıyla taşıyın, bırakmak için tekrar boşluk veya Enter'a, iptal için Escape'e basın.",
-};
 
 interface SortableListProps {
   ids: string[];
@@ -34,6 +30,7 @@ interface SortableListProps {
 
 /** Dikey, klavye ve dokunmatik destekli sıralanabilir liste. */
 export function SortableList({ ids, onMove, children }: SortableListProps) {
+  const { t } = useI18n();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     // Anında kaydırma: "smooth" kaydırma, sekme arka plandayken veya hareket azaltma
@@ -54,7 +51,7 @@ export function SortableList({ ids, onMove, children }: SortableListProps) {
       collisionDetection={closestCenter}
       // restrictToParentElement kullanılmaz: açık (uzun) akordeon bölümleri sınıra takılıp hareket edemiyordu.
       modifiers={[restrictToVerticalAxis]}
-      accessibility={{ screenReaderInstructions: SCREEN_READER_INSTRUCTIONS }}
+      accessibility={{ screenReaderInstructions: { draggable: t.list.dragInstructions } }}
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
@@ -87,8 +84,9 @@ export function SortableItem({ id, children, className }: { id: string; children
 }
 
 /** SortableItem içindeyse sürükleme tutamacını, değilse hiçbir şey render eder. */
-export function DragHandle({ label = "Sürükleyerek sırala", className }: { label?: string; className?: string }) {
+export function DragHandle({ label, className }: { label?: string; className?: string }) {
   const context = useContext(HandleContext);
+  const { t } = useI18n();
   if (!context) return null;
   const { attributes, listeners, setActivatorNodeRef } = context;
 
@@ -96,7 +94,7 @@ export function DragHandle({ label = "Sürükleyerek sırala", className }: { la
     <button
       ref={setActivatorNodeRef}
       type="button"
-      aria-label={label}
+      aria-label={label ?? t.list.dragItem}
       className={cn(
         "grid h-7 w-6 shrink-0 cursor-grab touch-none place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing",
         className,

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { createSampleResume } from "@/lib/schema/factories";
+import { detectUiLocaleFromPath } from "@/i18n";
+import { createSampleResumeFor } from "@/lib/schema/factories";
 import {
   CV_FONT_IDS,
   DEFAULT_HEADER_LAYOUT,
@@ -44,14 +45,16 @@ type PersistedState = Pick<ResumeState, "resume" | "versions" | "template" | "fo
 export const useResumeStore = create<ResumeState>()(
   persist(
     (set) => {
-      const sample = createSampleResume();
+      // İlk ziyaret: İngilizce sayfada John Doe (İngilizce CV), Türkçe sayfada Ayşe Yılmaz.
+      const initialLocale: ResumeLocale = detectUiLocaleFromPath();
+      const sample = createSampleResumeFor(initialLocale);
       return {
         resume: sample,
-        versions: { tr: sample },
+        versions: { [initialLocale]: sample },
         template: "classic",
         font: "template",
         header: DEFAULT_HEADER_LAYOUT,
-        locale: "tr",
+        locale: initialLocale,
         jobDescription: "",
         setResume: (resume) => set((s) => ({ resume, versions: { ...s.versions, [s.locale]: resume } })),
         setTemplate: (template) => set({ template }),

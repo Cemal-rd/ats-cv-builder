@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/i18n/provider";
 import { matchKeywords } from "@/lib/ats/keywords";
 import { resumeToPlainText } from "@/lib/resume/format";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,8 @@ export function KeywordMatcher() {
   const jobDescription = useResumeStore((s) => s.jobDescription);
   const setJobDescription = useResumeStore((s) => s.setJobDescription);
   const resume = useResumeStore((s) => s.resume);
+  const { t } = useI18n();
+  const m = t.ats.matcher;
 
   const deferredJob = useDeferredValue(jobDescription);
   const deferredResume = useDeferredValue(resume);
@@ -38,31 +41,29 @@ export function KeywordMatcher() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>İş ilanı eşleştirme</CardTitle>
-        <CardDescription>
-          Hedeflediğiniz ilanın metnini yapıştırın; öne çıkan anahtar kelimeler CV&apos;nizle karşılaştırılır.
-        </CardDescription>
+        <CardTitle>{m.title}</CardTitle>
+        <CardDescription>{m.description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Textarea
-            aria-label="İş ilanı metni"
+            aria-label={m.inputAria}
             rows={6}
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
-            placeholder="İş ilanı metnini buraya yapıştırın…"
+            placeholder={m.placeholder}
           />
           {jobDescription && (
             <Button variant="ghost" size="sm" onClick={() => setJobDescription("")}>
               <Eraser />
-              Temizle
+              {t.common.clear}
             </Button>
           )}
         </div>
 
         {!result && (
           <p className="text-xs text-muted-foreground">
-            Analiz için en az {MIN_JOB_TEXT_LENGTH} karakterlik bir ilan metni girin.
+            {m.tooShort(MIN_JOB_TEXT_LENGTH)}
           </p>
         )}
 
@@ -70,8 +71,8 @@ export function KeywordMatcher() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <div className="flex items-baseline justify-between text-sm">
-                <span className="font-medium">Eşleşme oranı</span>
-                <span className={cn("font-semibold tabular-nums", tone.text)}>%{result.percentage}</span>
+                <span className="font-medium">{m.matchRate}</span>
+                <span className={cn("font-semibold tabular-nums", tone.text)}>{t.ats.percent(result.percentage)}</span>
               </div>
               <Progress
                 value={result.percentage}
@@ -80,12 +81,12 @@ export function KeywordMatcher() {
                 )}
               />
               <p className="text-xs text-muted-foreground">
-                {result.keywords.length} anahtar kelimeden {result.matchedCount} tanesi CV&apos;nizde geçiyor.
+                {m.matchedCount(result.keywords.length, result.matchedCount)}
               </p>
             </div>
 
             {missing.length > 0 && (
-              <KeywordGroup title="Eksik anahtar kelimeler" hint="Gerçekten sahip olduğunuz yetkinlikleri, ilandaki yazımla ekleyin.">
+              <KeywordGroup title={m.missing} hint={m.missingHint}>
                 {missing.map((k) => (
                   <Badge key={k.term} variant="destructive">
                     <X className="h-3 w-3" />
@@ -96,7 +97,7 @@ export function KeywordMatcher() {
             )}
 
             {matched.length > 0 && (
-              <KeywordGroup title="Eşleşenler">
+              <KeywordGroup title={m.matched}>
                 {matched.map((k) => (
                   <Badge key={k.term} variant="success">
                     <Check className="h-3 w-3" />

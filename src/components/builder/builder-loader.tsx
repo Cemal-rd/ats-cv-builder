@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useI18n } from "@/i18n/provider";
 
 /**
  * Builder yalnızca istemcide render edilir: veriler localStorage'dan gelir,
@@ -16,8 +17,9 @@ export function BuilderLoader() {
 }
 
 function BuilderSkeleton() {
+  const { t } = useI18n();
   return (
-    <div className="flex h-dvh flex-col" aria-busy="true" aria-label="Yükleniyor">
+    <div className="flex h-dvh flex-col" aria-busy="true" aria-label={t.common.loading}>
       <div className="h-14 border-b" />
       <div className="flex flex-1">
         <div className="w-full space-y-3 p-4 lg:w-1/2">

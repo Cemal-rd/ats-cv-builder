@@ -3,6 +3,7 @@
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DragHandle } from "@/components/ui/sortable";
+import { useI18n } from "@/i18n/provider";
 import { cn } from "@/lib/utils";
 
 /** Liste öğesi bileşenlerinin (ExperienceItem, ProjectItem…) ortak props'u. */
@@ -22,6 +23,7 @@ interface ListItemCardProps extends ListItemProps {
 }
 
 export function ListItemCard({ title, subtitle, index, total, onMove, onRemove, compact, children }: ListItemCardProps) {
+  const { t } = useI18n();
   const controls = (
     <div className="flex shrink-0 items-center">
       {/* Butonlar sürükle-bırakın klavye/mobil alternatifi olarak kalır. */}
@@ -29,7 +31,7 @@ export function ListItemCard({ title, subtitle, index, total, onMove, onRemove, 
         variant="ghost"
         size="icon"
         className="h-7 w-7"
-        aria-label="Yukarı taşı"
+        aria-label={t.list.moveUp}
         disabled={index === 0}
         onClick={() => onMove(index, index - 1)}
       >
@@ -39,7 +41,7 @@ export function ListItemCard({ title, subtitle, index, total, onMove, onRemove, 
         variant="ghost"
         size="icon"
         className="h-7 w-7"
-        aria-label="Aşağı taşı"
+        aria-label={t.list.moveDown}
         disabled={index === total - 1}
         onClick={() => onMove(index, index + 1)}
       >
@@ -49,7 +51,7 @@ export function ListItemCard({ title, subtitle, index, total, onMove, onRemove, 
         variant="ghost"
         size="icon"
         className="h-7 w-7 text-muted-foreground hover:text-destructive"
-        aria-label="Sil"
+        aria-label={t.list.remove}
         onClick={onRemove}
       >
         <Trash2 />

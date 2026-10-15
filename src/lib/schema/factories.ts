@@ -10,6 +10,7 @@ import {
   type PersonalInfo,
   type Project,
   type Resume,
+  type ResumeLocale,
   type SkillGroup,
 } from "./resume";
 
@@ -185,3 +186,98 @@ export const createSampleResume = (): Resume => ({
   customSections: [],
   sectionOrder: [...BUILTIN_SECTIONS],
 });
+
+/** English sample resume (fictional) — shown on the English interface and English resume version. */
+export const createSampleResumeEn = (): Resume => ({
+  personal: {
+    ...createEmptyPersonal(),
+    fullName: "John Doe",
+    title: "Senior Frontend Engineer",
+    email: "john.doe@example.com",
+    phone: "+1 (555) 123-4567",
+    location: "San Francisco, CA",
+    linkedin: "linkedin.com/in/johndoe",
+    website: "github.com/johndoe",
+  },
+  summary:
+    "Senior Frontend Engineer with 6+ years of experience building fast, accessible web applications with React, " +
+    "TypeScript and Next.js. Proven track record of improving performance for high-traffic products and scaling " +
+    "component libraries across teams. Focused on shipping user-centered features with cross-functional partners.",
+  experience: [
+    {
+      ...createExperience(),
+      position: "Senior Frontend Engineer",
+      company: "Acme Technologies Inc.",
+      location: "San Francisco, CA",
+      startDate: "Jan 2022",
+      current: true,
+      description: [
+        "Redesigned the customer dashboard used by 120,000+ active users with React and TypeScript.",
+        "Reduced page load time by 45% through code splitting and caching.",
+        "Led a team of 5 frontend engineers and standardized the code review process.",
+        "Cut production bugs by 30% by adding automated tests to the CI/CD pipeline.",
+      ].join("\n"),
+    },
+    {
+      ...createExperience(),
+      position: "Frontend Engineer",
+      company: "Bright Digital Agency",
+      location: "Austin, TX",
+      startDate: "Jun 2019",
+      endDate: "Dec 2021",
+      description: [
+        "Built 15+ corporate websites with Next.js for clients in finance and retail.",
+        "Implemented WCAG 2.1 accessibility standards across all client projects.",
+        "Created a reusable component library with the design team, cutting delivery time by 25%.",
+      ].join("\n"),
+    },
+  ],
+  education: [
+    {
+      ...createEducation(),
+      institution: "Example State University",
+      degree: "Bachelor of Science",
+      field: "Computer Science",
+      location: "Boston, MA",
+      startDate: "2015",
+      endDate: "2019",
+      gpa: "3.7/4.0",
+    },
+  ],
+  skills: [
+    { ...createSkillGroup(), category: "Frontend", items: "React, Next.js, TypeScript, JavaScript, HTML5, CSS3, Tailwind CSS" },
+    { ...createSkillGroup(), category: "Tools", items: "Git, Jest, Playwright, Docker, Figma" },
+  ],
+  languages: [
+    { ...createLanguage(), name: "English", level: "native" },
+    { ...createLanguage(), name: "Spanish", level: "b2" },
+  ],
+  certifications: [
+    { ...createCertification(), name: "AWS Certified Cloud Practitioner", issuer: "Amazon Web Services", date: "2023" },
+  ],
+  projects: [
+    {
+      ...createProject(),
+      name: "Open-Source Form Library",
+      role: "Maintainer",
+      url: "github.com/johndoe/form-kit",
+      startDate: "2023",
+      description: [
+        "Developed a type-safe form library with Zod-based schema validation.",
+        "Grew the project to 800+ GitHub stars with 20+ contributors.",
+      ].join("\n"),
+    },
+  ],
+  customSections: [],
+  sectionOrder: [...BUILTIN_SECTIONS],
+});
+
+/** Dile göre örnek CV: Türkçe → Ayşe Yılmaz, İngilizce → John Doe. */
+export const createSampleResumeFor = (locale: ResumeLocale): Resume =>
+  locale === "en" ? createSampleResumeEn() : createSampleResume();
+
+const SAMPLE_EMAILS = new Set(["ayse.yilmaz@example.com", "john.doe@example.com"]);
+
+/** Kullanıcı örnek CV'yi henüz kendi bilgileriyle değiştirmediyse true. */
+export const isSampleResume = (resume: Resume): boolean =>
+  SAMPLE_EMAILS.has(resume.personal.email.trim().toLowerCase());

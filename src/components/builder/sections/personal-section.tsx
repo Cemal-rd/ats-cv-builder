@@ -3,27 +3,28 @@
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { useFormContext, useWatch } from "react-hook-form";
+import { useI18n } from "@/i18n/provider";
 import type { Resume } from "@/lib/schema/resume";
 import { PhotoField } from "../form/photo-field";
 import { TextField } from "../form/text-field";
 
-const MILITARY_OPTIONS = ["Yapıldı", "Muaf", "Tecilli", "Yükümlü değil"];
 const LICENSE_OPTIONS = ["B", "A2, B", "B, C", "B, D", "B, E"];
 
 export function PersonalSection() {
+  const { t } = useI18n();
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <PhotoField />
-      <TextField name="personal.fullName" label="Ad Soyad" placeholder="Ayşe Yılmaz" autoComplete="name" />
-      <TextField name="personal.title" label="Unvan / Hedef Pozisyon" placeholder="Kıdemli Frontend Geliştirici" />
-      <TextField name="personal.email" label="E-posta" type="email" placeholder="ad@ornek.com" autoComplete="email" />
-      <TextField name="personal.phone" label="Telefon" type="tel" placeholder="+90 555 123 45 67" autoComplete="tel" />
-      <TextField name="personal.location" label="Konum" placeholder="İstanbul, Türkiye" />
-      <TextField name="personal.linkedin" label="LinkedIn" placeholder="linkedin.com/in/adiniz" />
+      <TextField name="personal.fullName" label={t.personal.fullName} placeholder={t.personal.fullNamePlaceholder} autoComplete="name" />
+      <TextField name="personal.title" label={t.personal.title} placeholder={t.personal.titlePlaceholder} />
+      <TextField name="personal.email" label={t.personal.email} type="email" placeholder={t.personal.emailPlaceholder} autoComplete="email" />
+      <TextField name="personal.phone" label={t.personal.phone} type="tel" placeholder={t.personal.phonePlaceholder} autoComplete="tel" />
+      <TextField name="personal.location" label={t.fields.location} placeholder={t.personal.locationPlaceholder} />
+      <TextField name="personal.linkedin" label="LinkedIn" placeholder={t.personal.linkedinPlaceholder} />
       <TextField
         name="personal.website"
-        label="Web sitesi / Portfolyo"
-        placeholder="github.com/adiniz"
+        label={t.personal.website}
+        placeholder={t.personal.websitePlaceholder}
         className="sm:col-span-2"
       />
       <TurkeySpecificFields />
@@ -33,6 +34,8 @@ export function PersonalSection() {
 
 /** Varsayılan olarak kapalı; doluysa açık başlar ki kullanıcı verisini görsün. */
 function TurkeySpecificFields() {
+  const { t } = useI18n();
+  const r = t.personal.regional;
   const { control } = useFormContext<Resume>();
   const values = useWatch({
     control,
@@ -46,28 +49,28 @@ function TurkeySpecificFields() {
     <details className="group rounded-lg border sm:col-span-2" open={initiallyOpen || undefined}>
       <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm font-medium [&::-webkit-details-marker]:hidden">
         <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
-        Türkiye&apos;ye özel alanlar
+        {r.title}
         <span className="text-xs font-normal text-muted-foreground">
-          (opsiyonel{filledCount > 0 ? ` · ${filledCount} dolu` : ""})
+          ({r.optional}{filledCount > 0 ? ` · ${r.filled(filledCount)}` : ""})
         </span>
       </summary>
       <div className="grid gap-3 border-t p-3 sm:grid-cols-3">
         <p className="text-xs text-muted-foreground sm:col-span-3">
-          Yalnızca doldurduğunuz alanlar CV&apos;de görünür. Yurt dışı başvurularında bu bilgileri boş bırakın.
+          {r.note}
         </p>
         <TextField
           name="personal.militaryStatus"
-          label="Askerlik durumu"
-          placeholder="Yapıldı"
-          suggestions={MILITARY_OPTIONS}
-          hint="Tecilliyse tarihini ekleyin."
+          label={r.military}
+          placeholder={r.militaryPlaceholder}
+          suggestions={r.militaryOptions}
+          hint={r.militaryHint}
         />
-        <TextField name="personal.drivingLicense" label="Ehliyet" placeholder="B" suggestions={LICENSE_OPTIONS} />
+        <TextField name="personal.drivingLicense" label={r.license} placeholder="B" suggestions={LICENSE_OPTIONS} />
         <TextField
           name="personal.birthDate"
-          label="Doğum tarihi"
-          placeholder="01.01.1995"
-          hint="Zorunlu değil; yaş ayrımcılığına yol açabilir."
+          label={r.birthDate}
+          placeholder={r.birthDatePlaceholder}
+          hint={r.birthDateHint}
         />
       </div>
     </details>

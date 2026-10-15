@@ -10,7 +10,6 @@ export const TEMPLATES: Record<TemplateId, TemplateDefinition> = {
   classic: {
     id: "classic",
     name: "Classic Corporate",
-    description: "Serif yazı tipi, ortalanmış başlık, geleneksel kurumsal düzen.",
     // Fotoğrafsız: isim ortada. Fotoğraflı: fotoğraf solda, isim yanında sola hizalı.
     defaultHeader: (hasPhoto) => ({ align: hasPhoto ? "left" : "center", photoSide: "left" }),
     component: ClassicTemplate,
@@ -18,7 +17,6 @@ export const TEMPLATES: Record<TemplateId, TemplateDefinition> = {
   modern: {
     id: "modern",
     name: "Modern Clean",
-    description: "Sans-serif, sola hizalı, sade ve ferah düzen.",
     defaultHeader: () => ({ align: "left", photoSide: "right" }),
     component: ModernTemplate,
   },

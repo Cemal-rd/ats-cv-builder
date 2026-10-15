@@ -3,6 +3,7 @@
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAtsReport } from "@/hooks/use-ats-report";
+import { useI18n } from "@/i18n/provider";
 import type { AtsCheck, CheckStatus } from "@/lib/ats/types";
 import { cn } from "@/lib/utils";
 import { KeywordMatcher } from "./keyword-matcher";
@@ -19,13 +20,14 @@ const STATUS_ORDER: Record<CheckStatus, number> = { fail: 0, warn: 1, pass: 2 };
 export function AtsPanel() {
   const report = useAtsReport();
   const tone = scoreTone(report.score);
+  const { t } = useI18n();
   const sortedChecks = [...report.checks].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
 
   const stats = [
-    { label: "Madde", value: report.stats.bulletCount },
-    { label: "Aksiyon fiili", value: `%${Math.round(report.stats.actionVerbRatio * 100)}` },
-    { label: "Ölçülebilir", value: `%${Math.round(report.stats.quantifiedRatio * 100)}` },
-    { label: "Kelime", value: report.stats.wordCount },
+    { label: t.ats.stats.bullets, value: report.stats.bulletCount },
+    { label: t.ats.stats.actionVerbs, value: t.ats.percent(Math.round(report.stats.actionVerbRatio * 100)) },
+    { label: t.ats.stats.quantified, value: t.ats.percent(Math.round(report.stats.quantifiedRatio * 100)) },
+    { label: t.ats.stats.words, value: report.stats.wordCount },
   ];
 
   return (
@@ -35,9 +37,9 @@ export function AtsPanel() {
           <ScoreGauge score={report.score} />
           <div className="w-full flex-1 space-y-3">
             <div>
-              <p className={cn("text-sm font-semibold", tone.text)}>{tone.label}</p>
+              <p className={cn("text-sm font-semibold", tone.text)}>{t.ats.tone[tone.key]}</p>
               <p className="text-xs text-muted-foreground">
-                Skor siz yazdıkça güncellenir. Kırmızı ve sarı maddelerden başlayın.
+                {t.ats.liveHint}
               </p>
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -54,8 +56,8 @@ export function AtsPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Kontrol listesi</CardTitle>
-          <CardDescription>Her kontrol toplam skora ağırlığı oranında katkı sağlar.</CardDescription>
+          <CardTitle>{t.ats.checklist}</CardTitle>
+          <CardDescription>{t.ats.checklistDesc}</CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="divide-y">
@@ -72,6 +74,7 @@ export function AtsPanel() {
 }
 
 function CheckRow({ check }: { check: AtsCheck }) {
+  const { t } = useI18n();
   const { icon: Icon, className } = STATUS_ICON[check.status];
   return (
     <li className="flex gap-3 py-3 first:pt-0 last:pb-0">
@@ -80,7 +83,7 @@ function CheckRow({ check }: { check: AtsCheck }) {
         <div className="flex items-baseline justify-between gap-2">
           <p className="text-sm font-medium">{check.label}</p>
           <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-            {check.maxScore > 0 ? `${check.score}/${check.maxScore}` : "bilgi"}
+            {check.maxScore > 0 ? `${check.score}/${check.maxScore}` : t.ats.info}
           </span>
         </div>
         <p className="text-xs text-muted-foreground">{check.message}</p>

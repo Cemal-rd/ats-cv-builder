@@ -55,6 +55,7 @@ import {
   type FoundDate,
 } from "./patterns";
 import { hasActionVerb } from "@/lib/ats/action-verbs";
+import type { ImportWarning } from "./types";
 
 /**
  * Kural tabanlı CV ayrıştırıcı. Düz metni bölümlere ayırır ve her bölümü
@@ -64,6 +65,7 @@ import { hasActionVerb } from "@/lib/ats/action-verbs";
 
 export interface ImportedSectionSummary {
   kind: DetectedSectionKind;
+  /** Yalnızca özel bölümlerde dolu (CV'deki başlık); yerleşik bölümlerin adını arayüz kendi dilinde verir. */
   title: string;
   count: number;
   /** Kontrol ekranında gösterilecek ilk birkaç kaydın başlığı. */
@@ -73,7 +75,7 @@ export interface ImportedSectionSummary {
 export interface ResumeImportResult {
   resume: Resume;
   sections: ImportedSectionSummary[];
-  warnings: string[];
+  warnings: ImportWarning[];
 }
 
 interface Block {
@@ -99,16 +101,14 @@ const LONG_SENTENCE_WORDS = 10;
 export function parseResumeText(raw: string): ResumeImportResult {
   startClipLog();
   const lines = normalizeLines(raw);
-  const warnings: string[] = [];
+  const warnings: ImportWarning[] = [];
   if (lines.join(" ").length < 80) {
-    warnings.push(
-      "Dosyadan neredeyse hiç metin çıkmadı. Taranmış (fotoğraf) bir PDF olabilir; ATS sistemleri de bu dosyayı okuyamaz.",
-    );
+    warnings.push({ code: "lowText" });
   }
 
   const { header, blocks } = splitIntoBlocks(lines);
   if (blocks.length === 0 && lines.length > 5) {
-    warnings.push("Bölüm başlıkları (Deneyim, Eğitim, Yetenekler…) tanınamadı. Bilgilerin bir kısmı özet alanına aktarıldı.");
+    warnings.push({ code: "noHeadings" });
   }
 
   const fullText = lines.join("\n");
@@ -142,9 +142,11 @@ export function parseResumeText(raw: string): ResumeImportResult {
 
   const clipped = takeClipLog();
   if (clipped.length) {
-    warnings.push(
-      `${clipped.length} metin karakter sınırını aştığı için kelime sınırından kısaltıldı; aktarımdan sonra kontrol edin: ${clipped.slice(0, 3).join(", ")}${clipped.length > 3 ? "…" : ""}`,
-    );
+    warnings.push({
+      code: "clipped",
+      count: clipped.length,
+      examples: `${clipped.slice(0, 3).join(", ")}${clipped.length > 3 ? "…" : ""}`,
+    });
   }
 
   return { resume, sections: summarizeSections(resume), warnings };
@@ -618,37 +620,37 @@ function summarizeSections(resume: Resume): ImportedSectionSummary[] {
   const summaries: ImportedSectionSummary[] = [
     {
       kind: "experience",
-      title: "İş Deneyimi",
+      title: "",
       count: resume.experience.length,
       preview: resume.experience.map((e) => [e.position, e.company].filter(Boolean).join(" · ")),
     },
     {
       kind: "education",
-      title: "Eğitim",
+      title: "",
       count: resume.education.length,
       preview: resume.education.map((e) => [e.institution, e.degree].filter(Boolean).join(" · ")),
     },
     {
       kind: "skills",
-      title: "Yetenekler",
+      title: "",
       count: resume.skills.reduce((sum, g) => sum + g.items.split(",").filter((s) => s.trim()).length, 0),
       preview: resume.skills.map((g) => (g.category ? `${g.category}: ${g.items}` : g.items)),
     },
     {
       kind: "languages",
-      title: "Yabancı Diller",
+      title: "",
       count: resume.languages.length,
       preview: resume.languages.map((l) => `${l.name} (${resumeLabels.tr.languageLevels[l.level]})`),
     },
     {
       kind: "projects",
-      title: "Projeler",
+      title: "",
       count: resume.projects.length,
       preview: resume.projects.map((p) => p.name),
     },
     {
       kind: "certifications",
-      title: "Sertifikalar",
+      title: "",
       count: resume.certifications.length,
       preview: resume.certifications.map((c) => c.name),
     },

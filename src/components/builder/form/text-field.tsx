@@ -4,6 +4,8 @@ import { useFormContext, type FieldPath } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/i18n/provider";
+import type { Messages } from "@/i18n";
 import type { Resume } from "@/lib/schema/resume";
 import { cn } from "@/lib/utils";
 
@@ -34,11 +36,12 @@ export function TextField({
 }: TextFieldProps) {
   const { register, getFieldState, formState } = useFormContext<Resume>();
   const { error } = getFieldState(name, formState);
+  const { t } = useI18n();
 
   const fieldId = `field-${name.replace(/\./g, "-")}`;
   const messageId = `${fieldId}-message`;
   const listId = suggestions ? `${fieldId}-options` : undefined;
-  const message = error?.message ?? hint;
+  const message = (error?.message && translateError(error.message, t)) ?? hint;
   const controlProps = {
     id: fieldId,
     "aria-invalid": Boolean(error),
@@ -69,4 +72,11 @@ export function TextField({
       )}
     </div>
   );
+}
+
+/** Şema doğrulama kodlarını ("max:120", "email"…) arayüz diline çevirir. */
+function translateError(code: string, t: Messages): string {
+  const max = /^max:(\d+)$/.exec(code);
+  if (max) return t.validation.maxLength(Number(max[1]));
+  return t.validation[code as Exclude<keyof Messages["validation"], "maxLength">] ?? code;
 }
