@@ -45,7 +45,7 @@ type PersistedState = Pick<ResumeState, "resume" | "versions" | "template" | "fo
 export const useResumeStore = create<ResumeState>()(
   persist(
     (set) => {
-      // İlk ziyaret: İngilizce sayfada John Doe (İngilizce CV), Türkçe sayfada Ayşe Yılmaz.
+      // İlk ziyaret: İngilizce sayfada John Doe (İngilizce CV), Türkçe sayfada Ali Veli.
       const initialLocale: ResumeLocale = detectUiLocaleFromPath();
       const sample = createSampleResumeFor(initialLocale);
       return {

@@ -88,7 +88,7 @@ export const tr = {
 
   personal: {
     fullName: "Ad Soyad",
-    fullNamePlaceholder: "Ayşe Yılmaz",
+    fullNamePlaceholder: "Ali Veli",
     title: "Unvan / Hedef Pozisyon",
     titlePlaceholder: "Kıdemli Frontend Geliştirici",
     email: "E-posta",

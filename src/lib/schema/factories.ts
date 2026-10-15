@@ -106,12 +106,12 @@ export const createEmptyResume = (): Resume => ({
 export const createSampleResume = (): Resume => ({
   personal: {
     ...createEmptyPersonal(),
-    fullName: "Ayşe Yılmaz",
+    fullName: "Ali Veli",
     title: "Kıdemli Frontend Geliştirici",
-    email: "ayse.yilmaz@example.com",
+    email: "ali.veli@example.com",
     phone: "+90 555 123 45 67",
     location: "İstanbul, Türkiye",
-    linkedin: "linkedin.com/in/ayseyilmaz",
+    linkedin: "linkedin.com/in/aliveli",
     drivingLicense: "B",
   },
   summary:
@@ -272,11 +272,15 @@ export const createSampleResumeEn = (): Resume => ({
   sectionOrder: [...BUILTIN_SECTIONS],
 });
 
-/** Dile göre örnek CV: Türkçe → Ayşe Yılmaz, İngilizce → John Doe. */
+/** Dile göre örnek CV: Türkçe → Ali Veli, İngilizce → John Doe. */
 export const createSampleResumeFor = (locale: ResumeLocale): Resume =>
   locale === "en" ? createSampleResumeEn() : createSampleResume();
 
-const SAMPLE_EMAILS = new Set(["ayse.yilmaz@example.com", "john.doe@example.com"]);
+const SAMPLE_EMAILS = new Set([
+  "ali.veli@example.com",
+  "john.doe@example.com",
+  "ayse.yilmaz@example.com", // eski Türkçe örnek — kayıtlı verilerde hâlâ örnek sayılsın
+]);
 
 /** Kullanıcı örnek CV'yi henüz kendi bilgileriyle değiştirmediyse true. */
 export const isSampleResume = (resume: Resume): boolean =>

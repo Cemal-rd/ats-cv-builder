@@ -11,7 +11,7 @@ import { useReplaceResume } from "./use-replace-resume";
 /**
  * CV'nin dil sürümünü değiştirir. Hedef sürüm yoksa mevcut içerik kopyalanır,
  * kullanıcı çeviriyi kendisi yapar (otomatik çeviri yok). Mevcut CV henüz
- * dokunulmamış örnek CV ise hedef dilin örneği yüklenir (Ayşe Yılmaz ↔ John Doe).
+ * dokunulmamış örnek CV ise hedef dilin örneği yüklenir (Ali Veli ↔ John Doe).
  */
 export function useSwitchLocale() {
   const replaceResume = useReplaceResume();
