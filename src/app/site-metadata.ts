@@ -40,6 +40,8 @@ export function siteMetadata(locale: UiLocale): Metadata {
       url: pagePath(locale),
       locale: ogLocale,
       alternateLocale: locale === "en" ? "tr_TR" : "en_US",
+      images: [{ url: `${BASE_PATH}/og-${locale}.png`, width: 1200, height: 630, alt: title }],
     },
+    twitter: { card: "summary_large_image", title, description, images: [`${BASE_PATH}/og-${locale}.png`] },
   };
 }
